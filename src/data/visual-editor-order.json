@@ -1,4 +1,552 @@
 {
-  "version": 2,
-  "blockIds": []
+  "version": 3,
+  "blockIds": [
+    "coordinate-intro-title",
+    "coordinate-intro-hook",
+    "coordinate-intro-promise",
+    "coordinate-intro-point-distance",
+    "coordinate-intro-point-midpoint",
+    "coordinate-intro-point-line",
+    "coordinate-intro-point-circle",
+    "coordinate-intro-prerequisite",
+    "part-distance-midpoint-heading",
+    "block-1788006803776",
+    "distance-heading",
+    "distance-setup",
+    "distance-formula",
+    "distance-grid-figure",
+    "distance-working-figure",
+    "distance-worked-example",
+    "distance-question-root",
+    "distance-question-apply",
+    "midpoint-heading",
+    "midpoint-setup",
+    "midpoint-formula",
+    "midpoint-figure",
+    "midpoint-worked-example",
+    "midpoint-question-average",
+    "midpoint-question-subtract",
+    "part-straight-lines-heading",
+    "straight-lines-setup",
+    "straight-lines-formula",
+    "straight-lines-grid-figure",
+    "straight-lines-equation-figure",
+    "straight-lines-worked-example",
+    "straight-lines-question-height",
+    "straight-lines-question-shift",
+    "part-circles-heading",
+    "circles-setup",
+    "circles-figure",
+    "circles-formula",
+    "circles-worked-example",
+    "circles-question-radius",
+    "circles-question-centre",
+    "wrapping-up-heading",
+    "wrapping-up-insight",
+    "wrapping-up-next"
+  ],
+  "rows": [
+    {
+      "id": "layout-coordinate-intro-title",
+      "type": "stack",
+      "columns": [
+        [
+          "coordinate-intro-title"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-coordinate-intro-hook",
+      "type": "stack",
+      "columns": [
+        [
+          "coordinate-intro-hook"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-coordinate-intro-promise",
+      "type": "stack",
+      "columns": [
+        [
+          "coordinate-intro-promise"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-coordinate-intro-point-distance",
+      "type": "stack",
+      "columns": [
+        [
+          "coordinate-intro-point-distance"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-coordinate-intro-point-midpoint",
+      "type": "stack",
+      "columns": [
+        [
+          "coordinate-intro-point-midpoint"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-coordinate-intro-point-line",
+      "type": "stack",
+      "columns": [
+        [
+          "coordinate-intro-point-line"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-coordinate-intro-point-circle",
+      "type": "stack",
+      "columns": [
+        [
+          "coordinate-intro-point-circle"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-coordinate-intro-prerequisite",
+      "type": "stack",
+      "columns": [
+        [
+          "coordinate-intro-prerequisite"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-part-distance-midpoint-heading",
+      "type": "stack",
+      "columns": [
+        [
+          "part-distance-midpoint-heading"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-block-1788006803776",
+      "type": "stack",
+      "columns": [
+        [
+          "block-1788006803776"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-distance-heading",
+      "type": "stack",
+      "columns": [
+        [
+          "distance-heading"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-distance-setup",
+      "type": "stack",
+      "columns": [
+        [
+          "distance-setup"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-distance-formula",
+      "type": "stack",
+      "columns": [
+        [
+          "distance-formula"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-distance-linked-pair",
+      "type": "split",
+      "columns": [
+        [
+          "distance-grid-figure"
+        ],
+        [
+          "distance-working-figure"
+        ]
+      ],
+      "props": {
+        "ratio": "1:1",
+        "gap": "lg",
+        "align": "start"
+      }
+    },
+    {
+      "id": "layout-distance-worked-example",
+      "type": "stack",
+      "columns": [
+        [
+          "distance-worked-example"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-distance-question-root",
+      "type": "stack",
+      "columns": [
+        [
+          "distance-question-root"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-distance-question-apply",
+      "type": "stack",
+      "columns": [
+        [
+          "distance-question-apply"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-midpoint-heading",
+      "type": "stack",
+      "columns": [
+        [
+          "midpoint-heading"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-midpoint-setup",
+      "type": "stack",
+      "columns": [
+        [
+          "midpoint-setup"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-midpoint-formula",
+      "type": "stack",
+      "columns": [
+        [
+          "midpoint-formula"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-midpoint-figure",
+      "type": "stack",
+      "columns": [
+        [
+          "midpoint-figure"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-midpoint-worked-example",
+      "type": "stack",
+      "columns": [
+        [
+          "midpoint-worked-example"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-midpoint-question-average",
+      "type": "stack",
+      "columns": [
+        [
+          "midpoint-question-average"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-midpoint-question-subtract",
+      "type": "stack",
+      "columns": [
+        [
+          "midpoint-question-subtract"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-part-straight-lines-heading",
+      "type": "stack",
+      "columns": [
+        [
+          "part-straight-lines-heading"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-straight-lines-setup",
+      "type": "stack",
+      "columns": [
+        [
+          "straight-lines-setup"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-straight-lines-formula",
+      "type": "stack",
+      "columns": [
+        [
+          "straight-lines-formula"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-straight-lines-pair",
+      "type": "split",
+      "columns": [
+        [
+          "straight-lines-grid-figure"
+        ],
+        [
+          "straight-lines-equation-figure"
+        ]
+      ],
+      "props": {
+        "ratio": "1:1",
+        "gap": "lg",
+        "align": "start"
+      }
+    },
+    {
+      "id": "layout-straight-lines-worked-example",
+      "type": "stack",
+      "columns": [
+        [
+          "straight-lines-worked-example"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-straight-lines-question-height",
+      "type": "stack",
+      "columns": [
+        [
+          "straight-lines-question-height"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-straight-lines-question-shift",
+      "type": "stack",
+      "columns": [
+        [
+          "straight-lines-question-shift"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-part-circles-heading",
+      "type": "stack",
+      "columns": [
+        [
+          "part-circles-heading"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-circles-setup",
+      "type": "stack",
+      "columns": [
+        [
+          "circles-setup"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-circles-figure",
+      "type": "stack",
+      "columns": [
+        [
+          "circles-figure"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-circles-formula",
+      "type": "stack",
+      "columns": [
+        [
+          "circles-formula"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-circles-worked-example",
+      "type": "stack",
+      "columns": [
+        [
+          "circles-worked-example"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-circles-question-radius",
+      "type": "stack",
+      "columns": [
+        [
+          "circles-question-radius"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-circles-question-centre",
+      "type": "stack",
+      "columns": [
+        [
+          "circles-question-centre"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-wrapping-up-heading",
+      "type": "stack",
+      "columns": [
+        [
+          "wrapping-up-heading"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-wrapping-up-insight",
+      "type": "stack",
+      "columns": [
+        [
+          "wrapping-up-insight"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    },
+    {
+      "id": "layout-wrapping-up-next",
+      "type": "stack",
+      "columns": [
+        [
+          "wrapping-up-next"
+        ]
+      ],
+      "props": {
+        "maxWidth": "xl"
+      }
+    }
+  ]
 }
