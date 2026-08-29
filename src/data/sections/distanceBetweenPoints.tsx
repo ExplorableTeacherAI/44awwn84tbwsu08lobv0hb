@@ -474,34 +474,7 @@ export const distanceBetweenPointsBlocks: ReactElement[] = [
 
     <StackLayout key="layout-distance-setup" maxWidth="xl">
         <Block id="distance-setup" padding="sm">
-            <EditableParagraph id="para-distance-setup" blockId="distance-setup">
-                Two pins on a map are hardly ever straight across or straight up from each other,
-                so counting squares will not do it. Travel{" "}
-                <InlineLinkedHighlight
-                    varName="distanceHighlight"
-                    highlightId="across"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("distanceHighlight"))}
-                >
-                    across
-                </InlineLinkedHighlight>
-                , then travel{" "}
-                <InlineLinkedHighlight
-                    varName="distanceHighlight"
-                    highlightId="up"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("distanceHighlight"))}
-                >
-                    up
-                </InlineLinkedHighlight>
-                , and those two moves build a right-angled triangle with the pins at the ends of
-                the slope. Drag either{" "}
-                <InlineSpotColor
-                    varName="distancePinBx"
-                    {...spotColorPropsFromDefinition(getVariableInfo("distancePinBx"))}
-                >
-                    teal pin
-                </InlineSpotColor>{" "}
-                and watch the working rebuild itself line by line.
-            </EditableParagraph>
+            <EditableParagraph id="para-distance-setup" blockId="distance-setup">Two pins on a map are hardly ever straight across or straight up from each other, so counting squares will not do it. Travel <InlineLinkedHighlight varName={"distanceHighlight"} highlightId={"across"} color={"#FDD835"} bgColor={"rgba(98, 208, 173, 0.22)"} id={"linkedHighlight-1788005314634-0fwvg"}>across</InlineLinkedHighlight>, then travel <InlineLinkedHighlight varName={"distanceHighlight"} highlightId={"up"} color={"#62D0AD"} bgColor={"rgba(98, 208, 173, 0.22)"} id={"linkedHighlight-1788005314637-tgaz0"}>up</InlineLinkedHighlight>, and those two moves build a right-angled triangle with the pins at the ends of the slope. Drag either <InlineSpotColor varName={"distancePinBx"} color={"#62D0AD"} id={"spotColor-1788005314641-q89ls"}>teal pin</InlineSpotColor> and watch the working rebuild itself line by line.</EditableParagraph>
         </Block>
     </StackLayout>,
 

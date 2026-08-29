@@ -230,6 +230,73 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         color: '#8E90F5',
     },
 
+    // ========================================
+    // PART 3 — CIRCLES
+    // ========================================
+
+    /** Every point the student has tapped, stored as a flat list of x, y pairs. */
+    circlePoints: {
+        defaultValue: [],
+        type: 'array',
+        label: 'Tapped points',
+        description: 'Flat list of x, y pairs the student has tapped on the circle grid',
+    },
+
+    /** The most recent tap, so the panel can report its distance. */
+    circleLastX: {
+        defaultValue: -1,
+        type: 'number',
+        label: 'Last tap, across',
+        description: 'x coordinate of the most recently tapped point',
+        min: -1,
+        max: 10,
+        step: 1,
+        color: '#62D0AD',
+    },
+    circleLastY: {
+        defaultValue: -1,
+        type: 'number',
+        label: 'Last tap, up',
+        description: 'y coordinate of the most recently tapped point',
+        min: -1,
+        max: 10,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** Highlight channel for the circle figure: '' | 'centre' | 'radius' | 'found' */
+    circleHighlight: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Circle view highlight',
+        description: 'Which part of the circle figure is currently highlighted',
+        color: '#62D0AD',
+        bgColor: 'rgba(98, 208, 173, 0.22)',
+    },
+
+    /** Assessment — reading the radius out of r squared. */
+    answerCircleRadius: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Radius from the equation',
+        description: 'Student answer: the radius of (x - 4)^2 + (y - 1)^2 = 36',
+        placeholder: '???',
+        correctAnswer: '6',
+        color: '#8E90F5',
+    },
+
+    /** Assessment — reading the centre, signs and all. */
+    answerCircleCentre: {
+        defaultValue: '',
+        type: 'select',
+        label: 'Centre from the equation',
+        description: 'Student answer: the centre of (x - 4)^2 + (y + 1)^2 = 36',
+        placeholder: '???',
+        correctAnswer: '(4, −1)',
+        options: ['(4, −1)', '(−4, 1)', '(4, 1)'],
+        color: '#8E90F5',
+    },
+
     /** Assessment — full application with new coordinates. */
     answerDistanceApply: {
         defaultValue: '',
