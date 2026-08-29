@@ -82,8 +82,87 @@ export interface VariableDefinition {
  */
 export const variableDefinitions: Record<string, VariableDefinition> = {
     // ========================================
-    // ADD YOUR VARIABLES HERE
+    // PART 1 — DISTANCE BETWEEN TWO POINTS
     // ========================================
+
+    /** First pin on the grid — the "cafe". Snapped to whole grid squares. */
+    distancePinAx: {
+        defaultValue: 1,
+        type: 'number',
+        label: 'First pin, across',
+        description: 'x coordinate of the first pin in the distance figure',
+        min: 0,
+        max: 9,
+        step: 1,
+        color: '#62D0AD',
+    },
+    distancePinAy: {
+        defaultValue: 2,
+        type: 'number',
+        label: 'First pin, up',
+        description: 'y coordinate of the first pin in the distance figure',
+        min: 0,
+        max: 8,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** Second pin on the grid — the "library". Snapped to whole grid squares. */
+    distancePinBx: {
+        defaultValue: 4,
+        type: 'number',
+        label: 'Second pin, across',
+        description: 'x coordinate of the second pin in the distance figure',
+        min: 0,
+        max: 9,
+        step: 1,
+        color: '#62D0AD',
+    },
+    distancePinBy: {
+        defaultValue: 6,
+        type: 'number',
+        label: 'Second pin, up',
+        description: 'y coordinate of the second pin in the distance figure',
+        min: 0,
+        max: 8,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /**
+     * Shared highlight channel for the linked pair (grid + written working).
+     * Values: '' | 'across' | 'up' | 'squares' | 'distance'
+     */
+    distanceHighlight: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Distance view highlight',
+        description: 'Which quantity is highlighted across the grid and the working',
+        color: '#62D0AD',
+        bgColor: 'rgba(98, 208, 173, 0.22)',
+    },
+
+    /** Assessment — the square-root step (misconception target). */
+    answerDistanceRoot: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Distance from a squared total',
+        description: 'Student answer: the distance when the squared total is 100',
+        placeholder: '???',
+        correctAnswer: '10',
+        color: '#8E90F5',
+    },
+
+    /** Assessment — full application with new coordinates. */
+    answerDistanceApply: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Distance between two new pins',
+        description: 'Student answer: the distance from (2, 1) to (5, 5)',
+        placeholder: '???',
+        correctAnswer: '5',
+        color: '#8E90F5',
+    },
 
     // Uncomment and modify these examples for your lesson:
 
