@@ -153,6 +153,83 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         color: '#8E90F5',
     },
 
+    // ========================================
+    // PART 2 — STRAIGHT LINES
+    // ========================================
+
+    /** The gradient m: how far the line climbs for one step to the right. */
+    lineGradient: {
+        defaultValue: 2,
+        type: 'number',
+        label: 'Gradient',
+        description: 'The climb of the line for every one step to the right',
+        min: -1.5,
+        max: 2,
+        step: 0.5,
+        color: '#62D0AD',
+    },
+
+    /** The intercept c: the height at which the line crosses the y-axis. */
+    lineIntercept: {
+        defaultValue: 1,
+        type: 'number',
+        label: 'Y-axis crossing',
+        description: 'The height at which the line crosses the y-axis',
+        min: 0,
+        max: 4,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** The x value fed into the equation, marked on the line. */
+    lineProbeX: {
+        defaultValue: 4,
+        type: 'number',
+        label: 'x value',
+        description: 'The x value substituted into the line equation',
+        min: 0,
+        max: 9,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** Highlight channel for the line pair: '' | 'gradient' | 'intercept' | 'probe' */
+    lineHighlight: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Line view highlight',
+        description: 'Which part of the line and its equation is highlighted',
+        color: '#62D0AD',
+        bgColor: 'rgba(98, 208, 173, 0.22)',
+    },
+
+    /** Assessment — substituting an x value into y = mx + c. */
+    answerLineHeight: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Height of the line at x = 4',
+        description: 'Student answer: the height of y = 1.5x + 4 at x = 4',
+        placeholder: '???',
+        correctAnswer: '10',
+        color: '#8E90F5',
+    },
+
+    /** Assessment — what sliding a line up the grid actually changes. */
+    answerLineShift: {
+        defaultValue: '',
+        type: 'select',
+        label: 'What sliding the line changes',
+        description: 'Student answer: which number changes when a line slides up',
+        placeholder: '???',
+        correctAnswer: 'only c, the y-axis crossing',
+        options: [
+            'only c, the y-axis crossing',
+            'only m, the gradient',
+            'both m and c',
+        ],
+        color: '#8E90F5',
+    },
+
     /** Assessment — full application with new coordinates. */
     answerDistanceApply: {
         defaultValue: '',
