@@ -319,32 +319,48 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
     // PART 3 — CIRCLES
     // ========================================
 
-    /** Every point the student has tapped, stored as a flat list of x, y pairs. */
-    circlePoints: {
-        defaultValue: [],
-        type: 'array',
-        label: 'Tapped points',
-        description: 'Flat list of x, y pairs the student has tapped on the circle grid',
-    },
-
-    /** The most recent tap, so the panel can report its distance. */
-    circleLastX: {
-        defaultValue: -1,
+    /** The centre pin, snapped to whole grid squares. */
+    circleCentreX: {
+        defaultValue: -2,
         type: 'number',
-        label: 'Last tap, across',
-        description: 'x coordinate of the most recently tapped point',
-        min: -1,
-        max: 10,
+        label: 'Centre, across',
+        description: 'x coordinate of the circle centre',
+        min: -3,
+        max: 3,
         step: 1,
         color: '#62D0AD',
     },
-    circleLastY: {
-        defaultValue: -1,
+    circleCentreY: {
+        defaultValue: 1,
         type: 'number',
-        label: 'Last tap, up',
-        description: 'y coordinate of the most recently tapped point',
-        min: -1,
-        max: 10,
+        label: 'Centre, up',
+        description: 'y coordinate of the circle centre',
+        min: -3,
+        max: 3,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** The radius, set by pulling the bead in or out along the rim. */
+    circleRadius: {
+        defaultValue: 3,
+        type: 'number',
+        label: 'Radius',
+        description: 'Radius of the circle, set by the bead on the rim',
+        min: 1,
+        max: 3,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** Where the bead sits around the rim, in degrees. */
+    circleBeadAngle: {
+        defaultValue: 30,
+        type: 'number',
+        label: 'Bead angle',
+        description: 'Position of the bead around the rim, in degrees',
+        min: 0,
+        max: 359,
         step: 1,
         color: '#62D0AD',
     },
