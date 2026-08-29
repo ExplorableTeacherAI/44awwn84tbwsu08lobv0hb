@@ -21,8 +21,9 @@ import {
 } from "../variables";
 
 // ── View geometry ────────────────────────────────────────────────────────────
-// Grid on the left, the working panel on the right, gutters reserved before the
-// plot was sized so no label can run past the edge of the viewBox.
+// Grid on the left, the two competing methods written out on the right. The
+// panel gutter was reserved before the grid was sized, so no line of working
+// can run past the edge of the viewBox.
 
 const VIEW_WIDTH = 560;
 const VIEW_HEIGHT = 340;
@@ -48,25 +49,30 @@ const toPixelY = (y: number) => ORIGIN_Y - y * UNIT_PX;
 /** One formatter per quantity, shared by the drawing and the prose. */
 const formatCoordinate = (value: number) =>
     Number.isInteger(value) ? `${value}` : value.toFixed(1);
-const formatGap = (value: number) => value.toFixed(1);
+const formatSigned = (value: number) =>
+    `${value < 0 ? "−" : ""}${Math.abs(value)}`;
 
 const useMidpointModel = () => {
     const ax = useVar<number>("midpointPinAx", 1);
     const ay = useVar<number>("midpointPinAy", 1);
     const bx = useVar<number>("midpointPinBx", 6);
     const by = useVar<number>("midpointPinBy", 7);
-    const guessX = useVar<number>("midpointGuessX", 4.5);
-    const guessY = useVar<number>("midpointGuessY", 5);
-    const revealed = useVar<boolean>("midpointRevealed", false);
-    const middleX = (ax + bx) / 2;
-    const middleY = (ay + by) / 2;
+    const subtractX = bx - ax;
+    const subtractY = by - ay;
     return {
-        ax, ay, bx, by, guessX, guessY, revealed, middleX, middleY,
-        gap: Math.hypot(guessX - middleX, guessY - middleY),
+        ax, ay, bx, by,
+        middleX: (ax + bx) / 2,
+        middleY: (ay + by) / 2,
+        subtractX,
+        subtractY,
+        // The subtracted answer only lands on the grid when it happens to be
+        // positive; when it does not, the panel says so rather than hiding it.
+        subtractOnGrid:
+            subtractX >= 0 && subtractX <= GRID_MAX_X && subtractY >= 0 && subtractY <= GRID_MAX_Y,
     };
 };
 
-// ── Shared highlight channel ─────────────────────────────────────────────────
+// ── Highlight channel shared by the drawing, the formula and the prose ───────
 
 const useMidpointHighlight = () => {
     const highlight = useVar<string>("midpointHighlight", "");
@@ -95,7 +101,13 @@ const svgPointFromEvent = (event: React.PointerEvent, svg: SVGSVGElement | null)
     };
 };
 
-// ── The two pins, snapped to whole grid squares ──────────────────────────────
+/** Keeps a label inside the viewBox by flipping it left near the grid edge. */
+const labelPlacement = (cx: number, text: string) => {
+    const fitsRight = cx + 13 + text.length * 7.2 <= GRID_RIGHT + 14;
+    return { x: fitsRight ? cx + 13 : cx - 13, anchor: fitsRight ? "start" : "end" } as const;
+};
+
+// ── The two draggable pins, snapped to whole grid squares ────────────────────
 
 function MidpointPin({
     xVar,
@@ -115,6 +127,8 @@ function MidpointPin({
     const y = useVar<number>(yVar, 0);
     const [dragging, setDragging] = useState(false);
     const [hovered, setHovered] = useState(false);
+    // A ref, not state: a fast drag can deliver its first pointermove before a
+    // state update has flushed, and the stale closure would swallow it.
     const draggingRef = useRef(false);
     const scale = useSpring(dragging || hovered ? 1.18 : 1, { stiffness: 400, damping: 26 });
 
@@ -123,15 +137,12 @@ function MidpointPin({
         const point = svgPointFromEvent(event, svgRef.current);
         setVar(xVar, clamp(Math.round((point.x - ORIGIN_X) / UNIT_PX), 0, GRID_MAX_X));
         setVar(yVar, clamp(Math.round((ORIGIN_Y - point.y) / UNIT_PX), 0, GRID_MAX_Y));
-        // Moving a pin poses a fresh question, so the answer hides again.
-        setVar("midpointRevealed", false);
     };
 
     const cx = toPixelX(x);
     const cy = toPixelY(y);
     const labelText = `${label} (${x}, ${y})`;
-    const labelWidth = labelText.length * 7.2;
-    const labelFitsRight = cx + 13 + labelWidth <= GRID_RIGHT + 14;
+    const place = labelPlacement(cx, labelText);
 
     return (
         <g>
@@ -139,9 +150,9 @@ function MidpointPin({
                 <circle r="8" fill={INK_STRUCTURE} filter="url(#midpoint-pin-shadow)" />
             </g>
             <text
-                x={labelFitsRight ? cx + 13 : cx - 13}
+                x={place.x}
                 y={labelAbove ? cy - 12 : cy + 22}
-                textAnchor={labelFitsRight ? "start" : "end"}
+                textAnchor={place.anchor}
                 fill={INK}
                 fontSize="12"
                 style={NUMERALS}
@@ -175,83 +186,22 @@ function MidpointPin({
     );
 }
 
-// ── The hollow guess marker: the whole point of the figure ───────────────────
-
-function GuessMarker({ svgRef }: { svgRef: React.RefObject<SVGSVGElement> }) {
-    const setVar = useSetVar();
-    const { guessX, guessY } = useMidpointModel();
-    const { opacity, weight, isActive, hoverProps } = useMidpointHighlight();
-    const [dragging, setDragging] = useState(false);
-    const [hovered, setHovered] = useState(false);
-    const draggingRef = useRef(false);
-    const scale = useSpring(dragging || hovered ? 1.2 : 1, { stiffness: 400, damping: 26 });
-
-    const handlePointerMove = (event: React.PointerEvent<SVGCircleElement>) => {
-        if (!draggingRef.current) return;
-        const point = svgPointFromEvent(event, svgRef.current);
-        // Half squares, because a midpoint often lands between two lines.
-        setVar("midpointGuessX", clamp(Math.round((point.x - ORIGIN_X) / UNIT_PX * 2) / 2, 0, GRID_MAX_X));
-        setVar("midpointGuessY", clamp(Math.round((ORIGIN_Y - point.y) / UNIT_PX * 2) / 2, 0, GRID_MAX_Y));
-    };
-
-    const cx = toPixelX(guessX);
-    const cy = toPixelY(guessY);
-
-    return (
-        <g {...hoverProps("guess")} opacity={opacity("guess")} style={EASE_150}>
-            <Halo active={isActive("guess")}>
-                <circle cx={cx} cy={cy} r="10" fill="none" stroke={ACCENT} strokeWidth={weight("guess", 2) + 6} />
-            </Halo>
-            <g transform={`translate(${cx} ${cy}) scale(${scale})`}>
-                <circle
-                    r="10"
-                    fill="#FFFFFF"
-                    stroke={ACCENT}
-                    strokeWidth={weight("guess", 2)}
-                    strokeDasharray="4 3"
-                />
-            </g>
-            <circle
-                cx={cx}
-                cy={cy}
-                r="22"
-                fill="transparent"
-                style={{ cursor: dragging ? "grabbing" : "grab", touchAction: "none" }}
-                onPointerDown={(event) => {
-                    event.currentTarget.setPointerCapture(event.pointerId);
-                    draggingRef.current = true;
-                    setDragging(true);
-                    setVar("midpointRevealed", false);
-                }}
-                onPointerMove={handlePointerMove}
-                onPointerUp={() => {
-                    draggingRef.current = false;
-                    setDragging(false);
-                    setVar("midpointRevealed", true);
-                }}
-                onPointerCancel={() => {
-                    draggingRef.current = false;
-                    setDragging(false);
-                }}
-                onPointerEnter={() => setHovered(true)}
-                onPointerLeave={() => setHovered(false)}
-            />
-        </g>
-    );
-}
-
-// ── The drawing ──────────────────────────────────────────────────────────────
+// ── The drawing: one line, two competing answers ─────────────────────────────
 
 function MidpointDrawing() {
     const svgRef = useRef<SVGSVGElement>(null);
-    const { ax, ay, bx, by, guessX, guessY, revealed, middleX, middleY, gap } = useMidpointModel();
+    const {
+        ax, ay, bx, by, middleX, middleY, subtractX, subtractY, subtractOnGrid,
+    } = useMidpointModel();
     const { opacity, weight, isActive, hoverProps } = useMidpointHighlight();
 
     const pinA: Vec2 = { x: toPixelX(ax), y: toPixelY(ay) };
     const pinB: Vec2 = { x: toPixelX(bx), y: toPixelY(by) };
     const middle: Vec2 = { x: toPixelX(middleX), y: toPixelY(middleY) };
-    const guess: Vec2 = { x: toPixelX(guessX), y: toPixelY(guessY) };
-    const spotOn = gap < 0.01;
+    const subtracted: Vec2 = { x: toPixelX(subtractX), y: toPixelY(subtractY) };
+
+    const middlePlace = labelPlacement(middle.x, "middle");
+    const subtractPlace = labelPlacement(subtracted.x, "subtracting");
 
     return (
         <svg
@@ -259,7 +209,7 @@ function MidpointDrawing() {
             viewBox={`0 0 ${VIEW_WIDTH} ${VIEW_HEIGHT}`}
             className="block w-full select-none"
             role="img"
-            aria-label="Two pins joined by a line on a grid, with a hollow marker the student drops where they think the middle is"
+            aria-label="Two draggable pins joined by a line, with the averaged middle marked in teal and the subtracted answer marked in grey"
         >
             <defs>
                 <filter id="midpoint-pin-shadow" x="-50%" y="-50%" width="200%" height="200%">
@@ -295,75 +245,99 @@ function MidpointDrawing() {
                 <line x1={pinA.x} y1={pinA.y} x2={pinB.x} y2={pinB.y} stroke={INK_STRUCTURE} strokeWidth={weight("join", 2)} strokeLinecap="round" />
             </g>
 
-            {/* The reveal: the true middle, plus the gap back to the guess. */}
-            {revealed && (
-                <g {...hoverProps("middle")} opacity={opacity("middle")} style={EASE_150}>
-                    {!spotOn && (
-                        <line x1={guess.x} y1={guess.y} x2={middle.x} y2={middle.y} stroke={ACCENT} strokeWidth="1.5" strokeDasharray="3 4" opacity={0.7} />
-                    )}
-                    <Halo active={isActive("middle")}>
-                        <circle cx={middle.x} cy={middle.y} r="8" fill="none" stroke={ACCENT} strokeWidth="12" />
+            {/* SUBTRACTING — the wrong answer, drawn wherever it lands. */}
+            {subtractOnGrid && (
+                <g {...hoverProps("subtract")} opacity={opacity("subtract")} style={EASE_150}>
+                    <Halo active={isActive("subtract")}>
+                        <circle cx={subtracted.x} cy={subtracted.y} r="7" fill="none" stroke={INK_STRUCTURE} strokeWidth="12" />
                     </Halo>
-                    <circle cx={middle.x} cy={middle.y} r={isActive("middle") ? 10 : 8} fill={ACCENT} filter="url(#midpoint-pin-shadow)" style={EASE_150} />
+                    <circle
+                        cx={subtracted.x}
+                        cy={subtracted.y}
+                        r={isActive("subtract") ? 9 : 7}
+                        fill="#FFFFFF"
+                        stroke={INK_STRUCTURE}
+                        strokeWidth={weight("subtract", 2)}
+                        strokeDasharray="4 3"
+                        style={EASE_150}
+                    />
+                    <text
+                        x={subtractPlace.x}
+                        y={subtracted.y + 22}
+                        textAnchor={subtractPlace.anchor}
+                        fill={INK_STRUCTURE}
+                        fontSize="11"
+                    >
+                        subtracting
+                    </text>
                 </g>
             )}
+
+            {/* AVERAGING — the right answer, in the one accent hue. */}
+            <g {...hoverProps("average")} opacity={opacity("average")} style={EASE_150}>
+                <Halo active={isActive("average")}>
+                    <circle cx={middle.x} cy={middle.y} r="8" fill="none" stroke={ACCENT} strokeWidth="12" />
+                </Halo>
+                <circle cx={middle.x} cy={middle.y} r={isActive("average") ? 10 : 8} fill={ACCENT} filter="url(#midpoint-pin-shadow)" style={EASE_150} />
+                <text
+                    x={middlePlace.x}
+                    y={middle.y - 13}
+                    textAnchor={middlePlace.anchor}
+                    fill={ACCENT}
+                    fontSize="11"
+                >
+                    middle
+                </text>
+            </g>
 
             <g opacity={opacity("__structure")} style={EASE_150}>
                 <MidpointPin xVar="midpointPinAx" yVar="midpointPinAy" svgRef={svgRef} label="park" labelAbove={false} />
                 <MidpointPin xVar="midpointPinBx" yVar="midpointPinBy" svgRef={svgRef} label="shop" labelAbove />
             </g>
 
-            <GuessMarker svgRef={svgRef} />
+            {/* The two methods, written out side by side. */}
+            <g {...hoverProps("average")} opacity={opacity("average")} style={EASE_150}>
+                <rect x={PANEL_X - 8} y="46" width="190" height="100" fill="transparent" />
+                <text x={PANEL_X} y="62" fill={INK_STRUCTURE} fontSize="11">
+                    averaging
+                </text>
+                <text x={PANEL_X} y="88" fill={INK} fontSize="13" style={NUMERALS}>
+                    {`x: (${ax} + ${bx}) ÷ 2 = ${formatCoordinate(middleX)}`}
+                </text>
+                <text x={PANEL_X} y="110" fill={INK} fontSize="13" style={NUMERALS}>
+                    {`y: (${ay} + ${by}) ÷ 2 = ${formatCoordinate(middleY)}`}
+                </text>
+                <text x={PANEL_X} y="136" fill={ACCENT} fontSize="14" style={NUMERALS}>
+                    {`middle (${formatCoordinate(middleX)}, ${formatCoordinate(middleY)})`}
+                </text>
+            </g>
 
-            {/* The working panel — gutters reserved, every label anchored start
-                at x = 360 with room to spare inside the 560-wide viewBox. */}
-            {revealed ? (
-                <>
-                    <g {...hoverProps("middle")} opacity={opacity("middle")} style={EASE_150}>
-                        <rect x={PANEL_X - 8} y="72" width="190" height="110" fill="transparent" />
-                        <text x={PANEL_X} y="92" fill={INK} fontSize="13" style={NUMERALS}>
-                            {`x: (${ax} + ${bx}) ÷ 2 = ${formatCoordinate(middleX)}`}
-                        </text>
-                        <text x={PANEL_X} y="118" fill={INK} fontSize="13" style={NUMERALS}>
-                            {`y: (${ay} + ${by}) ÷ 2 = ${formatCoordinate(middleY)}`}
-                        </text>
-                        <text x={PANEL_X} y="162" fill={ACCENT} fontSize="14" style={NUMERALS}>
-                            {`middle = (${formatCoordinate(middleX)}, ${formatCoordinate(middleY)})`}
-                        </text>
-                    </g>
-                    <g {...hoverProps("guess")} opacity={opacity("guess")} style={EASE_150}>
-                        <rect x={PANEL_X - 8} y="188" width="190" height="52" fill="transparent" />
-                        <text x={PANEL_X} y="208" fill={INK} fontSize="12" style={NUMERALS}>
-                            {`your guess: (${formatCoordinate(guessX)}, ${formatCoordinate(guessY)})`}
-                        </text>
-                        <text x={PANEL_X} y="230" fill={spotOn ? ACCENT : INK_STRUCTURE} fontSize="11" style={NUMERALS}>
-                            {spotOn ? "spot on" : `${formatGap(gap)} away from the middle`}
-                        </text>
-                    </g>
-                </>
-            ) : (
-                <g {...hoverProps("middle")} opacity={opacity("middle")} style={EASE_150}>
-                    <rect x={PANEL_X - 8} y="72" width="190" height="100" fill="transparent" />
-                    <text
-                        x={PANEL_X}
-                        y="92"
-                        fill={isActive("middle") ? ACCENT : INK}
-                        fontSize={isActive("middle") ? "16" : "14"}
-                        style={EASE_150}
-                    >
-                        Where is the middle?
+            <g {...hoverProps("subtract")} opacity={opacity("subtract")} style={EASE_150}>
+                <rect x={PANEL_X - 8} y="164" width="190" height="140" fill="transparent" />
+                <text x={PANEL_X} y="180" fill={INK_STRUCTURE} fontSize="11">
+                    subtracting
+                </text>
+                <text x={PANEL_X} y="206" fill={INK} fontSize="13" style={NUMERALS}>
+                    {`x: ${bx} − ${ax} = ${formatSigned(subtractX)}`}
+                </text>
+                <text x={PANEL_X} y="228" fill={INK} fontSize="13" style={NUMERALS}>
+                    {`y: ${by} − ${ay} = ${formatSigned(subtractY)}`}
+                </text>
+                <text x={PANEL_X} y="254" fill={INK_STRUCTURE} fontSize="14" style={NUMERALS}>
+                    {`gives (${formatSigned(subtractX)}, ${formatSigned(subtractY)})`}
+                </text>
+                <text x={PANEL_X} y="278" fill={INK_STRUCTURE} fontSize="11">
+                    that is how far apart
+                </text>
+                <text x={PANEL_X} y="296" fill={INK_STRUCTURE} fontSize="11">
+                    {subtractOnGrid ? "they are, not a place" : "they are, and it is off"}
+                </text>
+                {!subtractOnGrid && (
+                    <text x={PANEL_X} y="314" fill={INK_STRUCTURE} fontSize="11">
+                        the grid entirely
                     </text>
-                    <text x={PANEL_X} y="122" fill={INK_STRUCTURE} fontSize="12">
-                        Drop the hollow marker
-                    </text>
-                    <text x={PANEL_X} y="142" fill={INK_STRUCTURE} fontSize="12">
-                        where you think it sits,
-                    </text>
-                    <text x={PANEL_X} y="162" fill={INK_STRUCTURE} fontSize="12">
-                        then let go.
-                    </text>
-                </g>
-            )}
+                )}
+            </g>
         </svg>
     );
 }
@@ -372,28 +346,25 @@ function MidpointFigure() {
     const setVar = useSetVar();
     return (
         <Figure
-            id="midpoint-guess"
+            id="midpoint-compare"
             onReset={() => {
                 setVar("midpointPinAx", 1);
                 setVar("midpointPinAy", 1);
                 setVar("midpointPinBx", 6);
                 setVar("midpointPinBy", 7);
-                setVar("midpointGuessX", 4.5);
-                setVar("midpointGuessY", 5);
-                setVar("midpointRevealed", false);
                 setVar("midpointHighlight", "");
             }}
-            caption="Drop the hollow marker where you think the middle of the line sits, then let go. The true middle appears in teal, with the working beside it. Move either grey pin for a fresh try."
+            caption="Drag either grey pin. The teal marker, worked out by averaging, never leaves the middle of the line, while the dashed marker from subtracting wanders off on its own."
         >
             <MidpointDrawing />
             <InteractionHintSequence
-                hintKey="midpoint-drop-guess"
+                hintKey="midpoint-drag-pin"
                 steps={[
                     {
                         gesture: "drag",
-                        label: "Drop the hollow marker on the middle, then let go",
-                        position: { x: "34%", y: "39%" },
-                        dragPath: { type: "line", startOffset: { x: 18, y: -14 }, endOffset: { x: -18, y: 14 } },
+                        label: "Drag the shop pin and watch both markers",
+                        position: { x: "42%", y: "23%" },
+                        dragPath: { type: "line", startOffset: { x: -20, y: -14 }, endOffset: { x: 20, y: 14 } },
                     },
                 ]}
             />
@@ -404,8 +375,8 @@ function MidpointFigure() {
 // ── Live numbers used inside the prose ───────────────────────────────────────
 
 function LiveSubtractedGap() {
-    const { ax, bx } = useMidpointModel();
-    return <span style={NUMERALS}>{`${bx} − ${ax} = ${bx - ax}`}</span>;
+    const { ax, bx, subtractX } = useMidpointModel();
+    return <span style={NUMERALS}>{`${bx} − ${ax} = ${formatSigned(subtractX)}`}</span>;
 }
 
 function LiveAveragedMiddle() {
@@ -430,24 +401,24 @@ export const findingMidpointBlocks: ReactElement[] = [
         <Block id="midpoint-setup" padding="sm">
             <EditableParagraph id="para-midpoint-setup" blockId="midpoint-setup">
                 Now suppose you want the meeting spot exactly halfway between the two pins.
-                Halfway between two numbers is simply their average: add them, then halve. Drop
-                the{" "}
+                Halfway between two numbers is simply their{" "}
                 <InlineLinkedHighlight
                     varName="midpointHighlight"
-                    highlightId="guess"
+                    highlightId="average"
                     {...linkedHighlightPropsFromDefinition(getVariableInfo("midpointHighlight"))}
                 >
-                    hollow marker
-                </InlineLinkedHighlight>{" "}
-                where you think that spot sits, let go, and the{" "}
+                    average
+                </InlineLinkedHighlight>
+                : add them, then halve. Drag either grey pin and watch the teal marker stay on the
+                line while the marker from{" "}
                 <InlineLinkedHighlight
                     varName="midpointHighlight"
-                    highlightId="middle"
+                    highlightId="subtract"
                     {...linkedHighlightPropsFromDefinition(getVariableInfo("midpointHighlight"))}
                 >
-                    true middle
+                    subtracting
                 </InlineLinkedHighlight>{" "}
-                appears next to your guess.
+                drifts away.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -473,7 +444,7 @@ export const findingMidpointBlocks: ReactElement[] = [
                 values are, while <LiveAveragedMiddle /> tells you where the{" "}
                 <InlineLinkedHighlight
                     varName="midpointHighlight"
-                    highlightId="middle"
+                    highlightId="average"
                     {...linkedHighlightPropsFromDefinition(getVariableInfo("midpointHighlight"))}
                 >
                     middle
@@ -502,28 +473,25 @@ export const findingMidpointBlocks: ReactElement[] = [
                         resetVars: {
                             midpointPinAx: 2,
                             midpointPinAy: 3,
-                            midpointPinBx: 7,
-                            midpointPinBy: 8,
-                            midpointGuessX: 2,
-                            midpointGuessY: 3,
-                            midpointRevealed: false,
+                            midpointPinBx: 9,
+                            midpointPinBy: 3,
                         },
                         steps: [
                             {
                                 gesture: "drag-horizontal",
-                                label: "Slide the hollow marker across until it sits between the two pins",
-                                position: { x: "21%", y: "55%" },
-                                completionVar: "midpointGuessX",
-                                completionValue: 4.5,
-                                completionTolerance: 0.6,
+                                label: "Drag the shop pin left until it sits above 7",
+                                position: { x: "63%", y: "63%" },
+                                completionVar: "midpointPinBx",
+                                completionValue: 7,
+                                completionTolerance: 0.4,
                             },
                             {
                                 gesture: "drag-vertical",
-                                label: "Now lift it onto the line and let go — read the x working on the right",
-                                position: { x: "34%", y: "45%" },
-                                completionVar: "midpointGuessY",
-                                completionValue: 5.5,
-                                completionTolerance: 0.6,
+                                label: "Now lift that pin up to 8 and read the x line of the averaging working",
+                                position: { x: "50%", y: "63%" },
+                                completionVar: "midpointPinBy",
+                                completionValue: 8,
+                                completionTolerance: 0.4,
                             },
                         ],
                     }}
@@ -557,27 +525,24 @@ export const findingMidpointBlocks: ReactElement[] = [
                             midpointPinAx: 2,
                             midpointPinAy: 3,
                             midpointPinBx: 9,
-                            midpointPinBy: 8,
-                            midpointGuessX: 2,
-                            midpointGuessY: 3,
-                            midpointRevealed: false,
+                            midpointPinBy: 3,
                         },
                         steps: [
                             {
                                 gesture: "drag-horizontal",
-                                label: "Drag the grey shop pin left until it sits above 7",
-                                position: { x: "58%", y: "24%" },
+                                label: "Drag the shop pin left until it sits above 7",
+                                position: { x: "63%", y: "63%" },
                                 completionVar: "midpointPinBx",
                                 completionValue: 7,
                                 completionTolerance: 0.4,
                             },
                             {
-                                gesture: "drag",
-                                label: "Drop the hollow marker on the middle and let go — compare 4.5 with 5",
-                                position: { x: "21%", y: "55%" },
-                                completionVar: "midpointGuessX",
-                                completionValue: 4.5,
-                                completionTolerance: 0.6,
+                                gesture: "drag-vertical",
+                                label: "Lift it to 8, then compare where the teal marker sits with the dashed one",
+                                position: { x: "50%", y: "63%" },
+                                completionVar: "midpointPinBy",
+                                completionValue: 8,
+                                completionTolerance: 0.4,
                             },
                         ],
                     }}

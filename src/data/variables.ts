@@ -154,6 +154,91 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
     },
 
     // ========================================
+    // PART 1 — FINDING THE MIDPOINT
+    // ========================================
+
+    /** The "park" pin. Snapped to whole grid squares. */
+    midpointPinAx: {
+        defaultValue: 1,
+        type: 'number',
+        label: 'Park pin, across',
+        description: 'x coordinate of the first pin in the midpoint figure',
+        min: 0,
+        max: 9,
+        step: 1,
+        color: '#62D0AD',
+    },
+    midpointPinAy: {
+        defaultValue: 1,
+        type: 'number',
+        label: 'Park pin, up',
+        description: 'y coordinate of the first pin in the midpoint figure',
+        min: 0,
+        max: 8,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** The "shop" pin. Snapped to whole grid squares. */
+    midpointPinBx: {
+        defaultValue: 6,
+        type: 'number',
+        label: 'Shop pin, across',
+        description: 'x coordinate of the second pin in the midpoint figure',
+        min: 0,
+        max: 9,
+        step: 1,
+        color: '#62D0AD',
+    },
+    midpointPinBy: {
+        defaultValue: 7,
+        type: 'number',
+        label: 'Shop pin, up',
+        description: 'y coordinate of the second pin in the midpoint figure',
+        min: 0,
+        max: 8,
+        step: 1,
+        color: '#62D0AD',
+    },
+
+    /** Highlight channel for the midpoint figure: '' | 'join' | 'average' | 'subtract' */
+    midpointHighlight: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Midpoint view highlight',
+        description: 'Which part of the midpoint figure is currently highlighted',
+        color: '#62D0AD',
+        bgColor: 'rgba(98, 208, 173, 0.22)',
+    },
+
+    /** Assessment — averaging, with an answer that lands on a half. */
+    answerMidpointAverage: {
+        defaultValue: '',
+        type: 'text',
+        label: 'Midpoint x coordinate',
+        description: 'Student answer: the x coordinate of the midpoint of (2, 3) and (7, 8)',
+        placeholder: '???',
+        correctAnswer: ['4.5', '4 1/2', '9/2'],
+        color: '#8E90F5',
+    },
+
+    /** Assessment — what subtracting actually gives (misconception target). */
+    answerMidpointSubtract: {
+        defaultValue: '',
+        type: 'select',
+        label: 'What subtracting gives',
+        description: 'Student answer: what the subtracted value tells you',
+        placeholder: '???',
+        correctAnswer: 'how far apart the two x values are',
+        options: [
+            'how far apart the two x values are',
+            'the x coordinate of the midpoint',
+            'the x coordinate of the gate',
+        ],
+        color: '#8E90F5',
+    },
+
+    // ========================================
     // PART 2 — STRAIGHT LINES
     // ========================================
 
