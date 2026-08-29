@@ -10,6 +10,7 @@ import {
     InlineLinkedHighlight,
     InlineScrubbleNumber,
     InlineSpotColor,
+    InlineToggle,
     InteractionHintSequence,
 } from "@/components/atoms";
 import { Figure, FigureSlider } from "@/components/molecules";
@@ -21,7 +22,7 @@ import {
     getVariableInfo,
     linkedHighlightPropsFromDefinition,
     numberPropsFromDefinition,
-    spotColorPropsFromDefinition,
+    togglePropsFromDefinition,
 } from "../variables";
 
 // ── Shared view geometry — the visible tie between the two views ─────────────
@@ -455,6 +456,15 @@ function LiveDistance() {
     );
 }
 
+/** How many points pin down whichever shape is currently named. */
+function ShapePointCount() {
+    const shape = useVar<string>("startingShape", "triangle");
+    if (shape === "line segment") return <span>just 2 of them, one at each end</span>;
+    if (shape === "rectangle") return <span>just 4 of them, one at each corner</span>;
+    if (shape === "circle") return <span>just 2 of them, its centre and any point on the rim</span>;
+    return <span>just 3 of them, one at each corner</span>;
+}
+
 export const distanceBetweenPointsBlocks: ReactElement[] = [
     <StackLayout key="layout-part-distance-midpoint-heading" maxWidth="xl">
         <Block id="part-distance-midpoint-heading" padding="md">
@@ -466,7 +476,16 @@ export const distanceBetweenPointsBlocks: ReactElement[] = [
 
     <StackLayout key="layout-block-1788006803776" maxWidth="xl">
         <Block id="block-1788006803776" padding="sm">
-            <EditableParagraph id="para-block-1788006803776" blockId="block-1788006803776">Every shape in geometry starts with points</EditableParagraph>
+            <EditableParagraph id="para-block-1788006803776" blockId="block-1788006803776">
+                Every shape in geometry starts with points. A{" "}
+                <InlineToggle
+                    id="toggle-starting-shape"
+                    varName="startingShape"
+                    options={["triangle", "line segment", "rectangle", "circle"]}
+                    {...togglePropsFromDefinition(getVariableInfo("startingShape"))}
+                />
+                {" "}needs <ShapePointCount /> to be pinned down completely.
+            </EditableParagraph>
         </Block>
     </StackLayout>,
 

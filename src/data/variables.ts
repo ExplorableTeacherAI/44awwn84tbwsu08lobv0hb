@@ -153,6 +153,17 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         color: '#8E90F5',
     },
 
+    /** Which shape the opening sentence is talking about. */
+    startingShape: {
+        defaultValue: 'triangle',
+        type: 'select',
+        label: 'Starting shape',
+        description: 'The shape used in the opening line about points',
+        options: ['triangle', 'line segment', 'rectangle', 'circle'],
+        color: '#8E90F5',
+        bgColor: 'rgba(142, 144, 245, 0.15)',
+    },
+
     // ========================================
     // PART 1 — FINDING THE MIDPOINT
     // ========================================
