@@ -466,7 +466,7 @@ export const distanceBetweenPointsBlocks: ReactElement[] = [
 
     <StackLayout key="layout-block-1788006803776" maxWidth="xl">
         <Block id="block-1788006803776" padding="sm">
-            <EditableParagraph id="para-block-1788006803776" blockId="block-1788006803776">/Every shape in geometry starts with points b</EditableParagraph>
+            <EditableParagraph id="para-block-1788006803776" blockId="block-1788006803776">Every shape in geometry starts with points b</EditableParagraph>
         </Block>
     </StackLayout>,
 
