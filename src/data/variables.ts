@@ -14,6 +14,7 @@
  */
 
 import { type VarValue } from '@/stores';
+import { LESSON_BACKGROUNDS, LESSON_COLORS } from './lessonColors';
 
 /**
  * Variable definition with metadata
@@ -94,7 +95,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 9,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.across,
     },
     distancePinAy: {
         defaultValue: 2,
@@ -104,7 +105,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 8,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.up,
     },
 
     /** Second pin on the grid — the "library". Snapped to whole grid squares. */
@@ -116,7 +117,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 9,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.across,
     },
     distancePinBy: {
         defaultValue: 6,
@@ -126,7 +127,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 8,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.up,
     },
 
     /**
@@ -138,8 +139,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         type: 'text',
         label: 'Distance view highlight',
         description: 'Which quantity is highlighted across the grid and the working',
-        color: '#62D0AD',
-        bgColor: 'rgba(98, 208, 173, 0.22)',
+        color: LESSON_COLORS.result,
+        bgColor: LESSON_BACKGROUNDS.result,
     },
 
     /** Assessment — the square-root step (misconception target). */
@@ -150,7 +151,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         description: 'Student answer: the distance when the squared total is 100',
         placeholder: '???',
         correctAnswer: '10',
-        color: '#8E90F5',
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     /** Which shape the opening sentence is talking about. */
@@ -160,8 +162,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         label: 'Starting shape',
         description: 'The shape used in the opening line about points',
         options: ['triangle', 'line segment', 'rectangle', 'circle'],
-        color: '#8E90F5',
-        bgColor: 'rgba(142, 144, 245, 0.15)',
+        color: LESSON_COLORS.choice,
+        bgColor: LESSON_BACKGROUNDS.choice,
     },
 
     // ========================================
@@ -177,7 +179,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 9,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.across,
     },
     midpointPinAy: {
         defaultValue: 1,
@@ -187,7 +189,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 8,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.up,
     },
 
     /** The "shop" pin. Snapped to whole grid squares. */
@@ -199,7 +201,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 9,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.across,
     },
     midpointPinBy: {
         defaultValue: 7,
@@ -209,7 +211,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 8,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.up,
     },
 
     /** Highlight channel for the midpoint figure: '' | 'join' | 'average' | 'subtract' */
@@ -218,8 +220,21 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         type: 'text',
         label: 'Midpoint view highlight',
         description: 'Which part of the midpoint figure is currently highlighted',
-        color: '#62D0AD',
-        bgColor: 'rgba(98, 208, 173, 0.22)',
+        color: LESSON_COLORS.result,
+        bgColor: LESSON_BACKGROUNDS.result,
+    },
+
+    /** The operation the student picks inside the live midpoint formula. */
+    midpointOperation: {
+        defaultValue: '',
+        type: 'select',
+        label: 'Midpoint operation',
+        description: 'Student choice: which operation combines the two x values before halving',
+        placeholder: '?',
+        correctAnswer: '+',
+        options: ['+', '\u2212', '\u00d7'],
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     /** Assessment — averaging, with an answer that lands on a half. */
@@ -230,7 +245,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         description: 'Student answer: the x coordinate of the midpoint of (2, 3) and (7, 8)',
         placeholder: '???',
         correctAnswer: ['4.5', '4 1/2', '9/2'],
-        color: '#8E90F5',
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     /** Assessment — what subtracting actually gives (misconception target). */
@@ -246,7 +262,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
             'the x coordinate of the midpoint',
             'the x coordinate of the gate',
         ],
-        color: '#8E90F5',
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     // ========================================
@@ -262,7 +279,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: -1.5,
         max: 2,
         step: 0.5,
-        color: '#62D0AD',
+        color: LESSON_COLORS.up,
     },
 
     /** The intercept c: the height at which the line crosses the y-axis. */
@@ -274,7 +291,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 4,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.across,
     },
 
     /** The x value fed into the equation, marked on the line. */
@@ -286,7 +303,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 9,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.derived,
     },
 
     /** Highlight channel for the line pair: '' | 'gradient' | 'intercept' | 'probe' */
@@ -295,8 +312,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         type: 'text',
         label: 'Line view highlight',
         description: 'Which part of the line and its equation is highlighted',
-        color: '#62D0AD',
-        bgColor: 'rgba(98, 208, 173, 0.22)',
+        color: LESSON_COLORS.result,
+        bgColor: LESSON_BACKGROUNDS.result,
     },
 
     /** Assessment — substituting an x value into y = mx + c. */
@@ -307,7 +324,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         description: 'Student answer: the height of y = 1.5x + 4 at x = 4',
         placeholder: '???',
         correctAnswer: '10',
-        color: '#8E90F5',
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     /** Assessment — what sliding a line up the grid actually changes. */
@@ -323,7 +341,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
             'only m, the gradient',
             'both m and c',
         ],
-        color: '#8E90F5',
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     // ========================================
@@ -339,7 +358,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: -3,
         max: 3,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.across,
     },
     circleCentreY: {
         defaultValue: 1,
@@ -349,7 +368,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: -3,
         max: 3,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.up,
     },
 
     /** The radius, set by pulling the bead in or out along the rim. */
@@ -361,7 +380,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 1,
         max: 3,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.result,
     },
 
     /** Where the bead sits around the rim, in degrees. */
@@ -373,7 +392,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 359,
         step: 1,
-        color: '#62D0AD',
+        color: LESSON_COLORS.result,
     },
 
     /** Highlight channel for the circle figure: '' | 'centre' | 'radius' | 'found' */
@@ -382,8 +401,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         type: 'text',
         label: 'Circle view highlight',
         description: 'Which part of the circle figure is currently highlighted',
-        color: '#62D0AD',
-        bgColor: 'rgba(98, 208, 173, 0.22)',
+        color: LESSON_COLORS.result,
+        bgColor: LESSON_BACKGROUNDS.result,
     },
 
     /** Assessment — reading the radius out of r squared. */
@@ -394,7 +413,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         description: 'Student answer: the radius of (x - 4)^2 + (y - 1)^2 = 36',
         placeholder: '???',
         correctAnswer: '6',
-        color: '#8E90F5',
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     /** Assessment — reading the centre, signs and all. */
@@ -406,7 +426,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         placeholder: '???',
         correctAnswer: '(4, −1)',
         options: ['(4, −1)', '(−4, 1)', '(4, 1)'],
-        color: '#8E90F5',
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     /** Assessment — full application with new coordinates. */
@@ -417,7 +438,8 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         description: 'Student answer: the distance from (2, 1) to (5, 5)',
         placeholder: '???',
         correctAnswer: '5',
-        color: '#8E90F5',
+        color: LESSON_COLORS.answer,
+        bgColor: LESSON_BACKGROUNDS.answer,
     },
 
     // Uncomment and modify these examples for your lesson:
