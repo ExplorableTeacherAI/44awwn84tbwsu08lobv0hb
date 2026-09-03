@@ -31,33 +31,15 @@ export const coordinateGeometryIntroBlocks: ReactElement[] = [
         </Block>
     </StackLayout>,
 
-    <StackLayout key="layout-coordinate-intro-point-distance" maxWidth="xl">
-        <Block id="coordinate-intro-point-distance" padding="sm">
-            <EditableParagraph id="para-coordinate-intro-point-distance" blockId="coordinate-intro-point-distance">
+    <StackLayout key="layout-coordinate-intro-objectives" maxWidth="xl">
+        <Block id="coordinate-intro-objectives" padding="sm">
+            <EditableParagraph id="para-coordinate-intro-objectives" blockId="coordinate-intro-objectives">
                 • Work out the distance between two points.
-            </EditableParagraph>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-coordinate-intro-point-midpoint" maxWidth="xl">
-        <Block id="coordinate-intro-point-midpoint" padding="sm">
-            <EditableParagraph id="para-coordinate-intro-point-midpoint" blockId="coordinate-intro-point-midpoint">
+                <br />
                 • Find the halfway point between them.
-            </EditableParagraph>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-coordinate-intro-point-line" maxWidth="xl">
-        <Block id="coordinate-intro-point-line" padding="sm">
-            <EditableParagraph id="para-coordinate-intro-point-line" blockId="coordinate-intro-point-line">
+                <br />
                 • Describe a straight line with an equation.
-            </EditableParagraph>
-        </Block>
-    </StackLayout>,
-
-    <StackLayout key="layout-coordinate-intro-point-circle" maxWidth="xl">
-        <Block id="coordinate-intro-point-circle" padding="sm">
-            <EditableParagraph id="para-coordinate-intro-point-circle" blockId="coordinate-intro-point-circle">
+                <br />
                 • Do the same for a circle.
             </EditableParagraph>
         </Block>
