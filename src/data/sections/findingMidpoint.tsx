@@ -8,6 +8,8 @@ import {
     InlineClozeInput,
     InlineFeedback,
     InlineLinkedHighlight,
+    InlineScrubbleNumber,
+    InlineTooltip,
     InteractionHintSequence,
 } from "@/components/atoms";
 import { Figure, FormulaBlock } from "@/components/molecules";
@@ -17,8 +19,10 @@ import {
     choicePropsFromDefinition,
     clozePropsFromDefinition,
     getVariableInfo,
-    linkedHighlightPropsFromDefinition,
+    numberPropsFromDefinition,
+    scrubVarsFromDefinitions,
 } from "../variables";
+import { LESSON_BACKGROUNDS, LESSON_COLORS } from "../lessonColors";
 
 // ── View geometry ────────────────────────────────────────────────────────────
 // Grid on the left, the two competing methods written out on the right. The
@@ -38,7 +42,19 @@ const PANEL_X = 360;
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
 const INK_QUIET = "#CBD5E1";
-const ACCENT = "#62D0AD";
+// ONE quantity, ONE colour: x values are indigo, y values are amber, the middle
+// is teal and the tempting subtraction is kept quiet in slate.
+const ACCENT = LESSON_COLORS.result;
+const ACROSS = LESSON_COLORS.across;
+const UP = LESSON_COLORS.up;
+const WRONG = LESSON_COLORS.wrong;
+
+/** Highlight chip colours, one per idea, shared by prose and figure. */
+const HIGHLIGHT_STYLE = {
+    average: { color: ACCENT, bgColor: LESSON_BACKGROUNDS.result },
+    subtract: { color: WRONG, bgColor: LESSON_BACKGROUNDS.wrong },
+    join: { color: LESSON_COLORS.derived, bgColor: LESSON_BACKGROUNDS.derived },
+} as const;
 
 const EASE_150 = { transition: "opacity 150ms ease, stroke-width 150ms ease" } as const;
 const NUMERALS = { fontVariantNumeric: "tabular-nums" } as const;
@@ -157,7 +173,11 @@ function MidpointPin({
                 fontSize="12"
                 style={NUMERALS}
             >
-                {labelText}
+                <tspan fill={INK}>{`${label} (`}</tspan>
+                <tspan fill={ACROSS}>{x}</tspan>
+                <tspan fill={INK}>{", "}</tspan>
+                <tspan fill={UP}>{y}</tspan>
+                <tspan fill={INK}>{")"}</tspan>
             </text>
             <circle
                 cx={cx}
@@ -249,14 +269,14 @@ function MidpointDrawing() {
             {subtractOnGrid && (
                 <g {...hoverProps("subtract")} opacity={opacity("subtract")} style={EASE_150}>
                     <Halo active={isActive("subtract")}>
-                        <circle cx={subtracted.x} cy={subtracted.y} r="7" fill="none" stroke={INK_STRUCTURE} strokeWidth="12" />
+                        <circle cx={subtracted.x} cy={subtracted.y} r="7" fill="none" stroke={WRONG} strokeWidth="12" />
                     </Halo>
                     <circle
                         cx={subtracted.x}
                         cy={subtracted.y}
                         r={isActive("subtract") ? 9 : 7}
                         fill="#FFFFFF"
-                        stroke={INK_STRUCTURE}
+                        stroke={WRONG}
                         strokeWidth={weight("subtract", 2)}
                         strokeDasharray="4 3"
                         style={EASE_150}
@@ -265,7 +285,7 @@ function MidpointDrawing() {
                         x={subtractPlace.x}
                         y={subtracted.y + 22}
                         textAnchor={subtractPlace.anchor}
-                        fill={INK_STRUCTURE}
+                        fill={WRONG}
                         fontSize="11"
                     >
                         subtracting
@@ -301,39 +321,43 @@ function MidpointDrawing() {
                 <text x={PANEL_X} y="62" fill={INK_STRUCTURE} fontSize="11">
                     averaging
                 </text>
-                <text x={PANEL_X} y="88" fill={INK} fontSize="13" style={NUMERALS}>
+                <text x={PANEL_X} y="88" fill={ACROSS} fontSize="13" style={NUMERALS}>
                     {`x: (${ax} + ${bx}) ÷ 2 = ${formatCoordinate(middleX)}`}
                 </text>
-                <text x={PANEL_X} y="110" fill={INK} fontSize="13" style={NUMERALS}>
+                <text x={PANEL_X} y="110" fill={UP} fontSize="13" style={NUMERALS}>
                     {`y: (${ay} + ${by}) ÷ 2 = ${formatCoordinate(middleY)}`}
                 </text>
-                <text x={PANEL_X} y="136" fill={ACCENT} fontSize="14" style={NUMERALS}>
-                    {`middle (${formatCoordinate(middleX)}, ${formatCoordinate(middleY)})`}
+                <text x={PANEL_X} y="136" fontSize="14" style={NUMERALS}>
+                    <tspan fill={ACCENT}>{"middle ("}</tspan>
+                    <tspan fill={ACROSS}>{formatCoordinate(middleX)}</tspan>
+                    <tspan fill={ACCENT}>{", "}</tspan>
+                    <tspan fill={UP}>{formatCoordinate(middleY)}</tspan>
+                    <tspan fill={ACCENT}>{")"}</tspan>
                 </text>
             </g>
 
             <g {...hoverProps("subtract")} opacity={opacity("subtract")} style={EASE_150}>
                 <rect x={PANEL_X - 8} y="164" width="190" height="140" fill="transparent" />
-                <text x={PANEL_X} y="180" fill={INK_STRUCTURE} fontSize="11">
+                <text x={PANEL_X} y="180" fill={WRONG} fontSize="11">
                     subtracting
                 </text>
-                <text x={PANEL_X} y="206" fill={INK} fontSize="13" style={NUMERALS}>
+                <text x={PANEL_X} y="206" fill={ACROSS} fontSize="13" style={NUMERALS}>
                     {`x: ${bx} − ${ax} = ${formatSigned(subtractX)}`}
                 </text>
-                <text x={PANEL_X} y="228" fill={INK} fontSize="13" style={NUMERALS}>
+                <text x={PANEL_X} y="228" fill={UP} fontSize="13" style={NUMERALS}>
                     {`y: ${by} − ${ay} = ${formatSigned(subtractY)}`}
                 </text>
-                <text x={PANEL_X} y="254" fill={INK_STRUCTURE} fontSize="14" style={NUMERALS}>
+                <text x={PANEL_X} y="254" fill={WRONG} fontSize="14" style={NUMERALS}>
                     {`gives (${formatSigned(subtractX)}, ${formatSigned(subtractY)})`}
                 </text>
-                <text x={PANEL_X} y="278" fill={INK_STRUCTURE} fontSize="11">
+                <text x={PANEL_X} y="278" fill={WRONG} fontSize="11">
                     that is how far apart
                 </text>
-                <text x={PANEL_X} y="296" fill={INK_STRUCTURE} fontSize="11">
+                <text x={PANEL_X} y="296" fill={WRONG} fontSize="11">
                     {subtractOnGrid ? "they are, not a place" : "they are, and it is off"}
                 </text>
                 {!subtractOnGrid && (
-                    <text x={PANEL_X} y="314" fill={INK_STRUCTURE} fontSize="11">
+                    <text x={PANEL_X} y="314" fill={WRONG} fontSize="11">
                         the grid entirely
                     </text>
                 )}
@@ -376,7 +400,11 @@ function MidpointFigure() {
 
 function LiveSubtractedGap() {
     const { ax, bx, subtractX } = useMidpointModel();
-    return <span style={NUMERALS}>{`${bx} − ${ax} = ${formatSigned(subtractX)}`}</span>;
+    return (
+        <span style={{ ...NUMERALS, color: WRONG, fontWeight: 600 }}>
+            {`${bx} − ${ax} = ${formatSigned(subtractX)}`}
+        </span>
+    );
 }
 
 function LiveAveragedMiddle() {
@@ -400,32 +428,50 @@ export const findingMidpointBlocks: ReactElement[] = [
     <StackLayout key="layout-midpoint-setup" maxWidth="xl">
         <Block id="midpoint-setup" padding="sm">
             <EditableParagraph id="para-midpoint-setup" blockId="midpoint-setup">
-                Now suppose you want the meeting spot exactly halfway between the two pins.
-                Halfway between two numbers is simply their{" "}
+                Now suppose you want the meeting spot exactly halfway between the two pins. The{" "}
+                <InlineTooltip
+                    id="tooltip-midpoint-definition"
+                    tooltip="The midpoint is the point sitting exactly halfway along the line joining two points, the same distance from each end."
+                >
+                    midpoint
+                </InlineTooltip>
+                {" "}comes from combining the two x values and then halving, but which combination?
+                Drag either grey pin: the{" "}
                 <InlineLinkedHighlight
                     varName="midpointHighlight"
                     highlightId="average"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("midpointHighlight"))}
+                    {...HIGHLIGHT_STYLE.average}
                 >
-                    average
+                    teal marker
                 </InlineLinkedHighlight>
-                : add them, then halve. Drag either grey pin and watch the teal marker stay on the
-                line while the marker from{" "}
+                {" "}stays on the line, while the marker from{" "}
                 <InlineLinkedHighlight
                     varName="midpointHighlight"
                     highlightId="subtract"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("midpointHighlight"))}
+                    {...HIGHLIGHT_STYLE.subtract}
                 >
                     subtracting
-                </InlineLinkedHighlight>{" "}
-                drifts away.
+                </InlineLinkedHighlight>
+                {" "}drifts away.
             </EditableParagraph>
         </Block>
     </StackLayout>,
 
     <StackLayout key="layout-midpoint-formula" maxWidth="xl">
         <Block id="midpoint-formula" padding="lg">
-            <FormulaBlock latex="M = \left( \frac{x_1 + x_2}{2},\ \frac{y_1 + y_2}{2} \right)" />
+            <FormulaBlock
+                latex="\text{middle } \clr{across}{x} = ( \clr{across}{x_1} \; \choice{midpointOperation} \; \clr{across}{x_2} ) \div 2"
+                colorMap={{ across: ACROSS, up: UP }}
+                clozeChoices={{
+                    midpointOperation: {
+                        correctAnswer: "+",
+                        options: ["+", "\u2212", "\u00d7"],
+                        placeholder: "?",
+                        color: LESSON_COLORS.answer,
+                        bgColor: LESSON_BACKGROUNDS.answer,
+                    },
+                }}
+            />
         </Block>
     </StackLayout>,
 
@@ -435,21 +481,45 @@ export const findingMidpointBlocks: ReactElement[] = [
         </Block>
     </StackLayout>,
 
+    <StackLayout key="layout-midpoint-live-formula" maxWidth="xl">
+        <Block id="midpoint-live-formula" padding="lg">
+            <FormulaBlock
+                latex="M = \left( \frac{\scrub{midpointPinAx} + \scrub{midpointPinBx}}{2},\ \frac{\scrub{midpointPinAy} + \scrub{midpointPinBy}}{2} \right)"
+                variables={scrubVarsFromDefinitions([
+                    "midpointPinAx",
+                    "midpointPinAy",
+                    "midpointPinBx",
+                    "midpointPinBy",
+                ])}
+            />
+        </Block>
+    </StackLayout>,
+
     <StackLayout key="layout-midpoint-worked-example" maxWidth="xl">
         <Block id="midpoint-worked-example" padding="sm">
             <EditableParagraph id="para-midpoint-worked-example" blockId="midpoint-worked-example">
-                Do that for the x values, then again for the y values, and you have the midpoint.
-                Subtracting is the tempting mistake here, because subtracting is exactly what we
-                did for distance. But <LiveSubtractedGap /> tells you how far apart the two x
-                values are, while <LiveAveragedMiddle /> tells you where the{" "}
+                Adding and halving works down the y column in exactly the same way, and together
+                the two give the midpoint. Subtracting is the tempting mistake here, because
+                subtracting is exactly what we did for distance. But with the shop at (
+                <InlineScrubbleNumber
+                    varName="midpointPinBx"
+                    {...numberPropsFromDefinition(getVariableInfo("midpointPinBx"))}
+                />
+                ,{" "}
+                <InlineScrubbleNumber
+                    varName="midpointPinBy"
+                    {...numberPropsFromDefinition(getVariableInfo("midpointPinBy"))}
+                />
+                ), <LiveSubtractedGap /> tells you how far apart the two x values are, while{" "}
+                <LiveAveragedMiddle /> tells you where the{" "}
                 <InlineLinkedHighlight
                     varName="midpointHighlight"
                     highlightId="average"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("midpointHighlight"))}
+                    {...HIGHLIGHT_STYLE.average}
                 >
                     middle
-                </InlineLinkedHighlight>{" "}
-                is.
+                </InlineLinkedHighlight>
+                {" "}is.
             </EditableParagraph>
         </Block>
     </StackLayout>,

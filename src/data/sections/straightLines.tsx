@@ -9,6 +9,8 @@ import {
     InlineFeedback,
     InlineLinkedHighlight,
     InlineScrubbleNumber,
+    InlineTooltip,
+    InlineTrigger,
     InteractionHintSequence,
 } from "@/components/atoms";
 import { Figure, FigureSlider, FormulaBlock } from "@/components/molecules";
@@ -18,9 +20,10 @@ import {
     choicePropsFromDefinition,
     clozePropsFromDefinition,
     getVariableInfo,
-    linkedHighlightPropsFromDefinition,
     numberPropsFromDefinition,
+    scrubVarsFromDefinitions,
 } from "../variables";
+import { LESSON_BACKGROUNDS, LESSON_COLORS } from "../lessonColors";
 
 // ── View geometry ────────────────────────────────────────────────────────────
 // Both views share the same viewBox, the same readout strip and the same accent
@@ -40,7 +43,19 @@ const TILT_HANDLE_X = 2;
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
 const INK_QUIET = "#CBD5E1";
-const ACCENT = "#62D0AD";
+// ONE quantity, ONE colour: the gradient m is amber, the crossing c is violet,
+// the x value being tested is indigo, and the line and its height are teal.
+const ACCENT = LESSON_COLORS.result;
+const GRADIENT = LESSON_COLORS.up;
+const INTERCEPT = LESSON_COLORS.derived;
+const PROBE = LESSON_COLORS.across;
+
+/** Highlight chip colours, one per quantity, shared by prose and formula. */
+const HIGHLIGHT_STYLE = {
+    gradient: { color: GRADIENT, bgColor: LESSON_BACKGROUNDS.up },
+    intercept: { color: INTERCEPT, bgColor: LESSON_BACKGROUNDS.derived },
+    probe: { color: ACCENT, bgColor: LESSON_BACKGROUNDS.result },
+} as const;
 
 const EASE_150 = { transition: "opacity 150ms ease, stroke-width 150ms ease" } as const;
 const NUMERALS = { fontVariantNumeric: "tabular-nums" } as const;
@@ -97,10 +112,10 @@ function SharedReadouts() {
     const { opacity } = useLineHighlight();
     return (
         <g fontSize="12" style={{ ...NUMERALS, ...EASE_150 }}>
-            <text x="24" y="26" fill={INK} opacity={opacity("gradient")}>
+            <text x="24" y="26" fill={GRADIENT} opacity={opacity("gradient")}>
                 {`gradient m = ${formatNumber(gradient)}`}
             </text>
-            <text x={VIEW_WIDTH - 24} y="26" fill={INK} textAnchor="end" opacity={opacity("intercept")}>
+            <text x={VIEW_WIDTH - 24} y="26" fill={INTERCEPT} textAnchor="end" opacity={opacity("intercept")}>
                 {`crossing c = ${formatNumber(intercept)}`}
             </text>
         </g>
@@ -114,11 +129,13 @@ function VerticalHandle({
     y,
     onDragTo,
     svgRef,
+    color = ACCENT,
 }: {
     x: number;
     y: number;
     onDragTo: (value: number) => void;
     svgRef: React.RefObject<SVGSVGElement>;
+    color?: string;
 }) {
     const [dragging, setDragging] = useState(false);
     const [hovered, setHovered] = useState(false);
@@ -137,7 +154,7 @@ function VerticalHandle({
     return (
         <g>
             <g transform={`translate(${cx} ${cy}) scale(${scale})`}>
-                <circle r="8" fill={ACCENT} filter="url(#line-handle-shadow)" />
+                <circle r="8" fill={color} filter="url(#line-handle-shadow)" />
             </g>
             <circle
                 cx={cx}
@@ -236,8 +253,8 @@ function LineGridDrawing() {
                                 <path
                                     d={`M ${toPixelX(i)} ${toPixelY(heightAt(i))} L ${toPixelX(i + 1)} ${toPixelY(heightAt(i))} L ${toPixelX(i + 1)} ${toPixelY(heightAt(i + 1))}`}
                                     fill="none"
-                                    stroke={INK_STRUCTURE}
-                                    strokeWidth={weight("gradient", 2) + 6}
+                                    stroke={GRADIENT}
+                                    strokeWidth={weight("gradient", 2.5) + 6}
                                     strokeLinecap="round"
                                     strokeLinejoin="round"
                                 />
@@ -245,8 +262,8 @@ function LineGridDrawing() {
                             <path
                                 d={`M ${toPixelX(i)} ${toPixelY(heightAt(i))} L ${toPixelX(i + 1)} ${toPixelY(heightAt(i))} L ${toPixelX(i + 1)} ${toPixelY(heightAt(i + 1))}`}
                                 fill="none"
-                                stroke={INK_STRUCTURE}
-                                strokeWidth={weight("gradient", 2)}
+                                stroke={GRADIENT}
+                                strokeWidth={weight("gradient", 2.5)}
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                             />
@@ -271,7 +288,7 @@ function LineGridDrawing() {
                 {probeInGrid && (
                     <g {...hoverProps("probe")} opacity={opacity("probe")} style={EASE_150}>
                         <line x1={toPixelX(0)} y1={toPixelY(probeY)} x2={toPixelX(probeX)} y2={toPixelY(probeY)} stroke={ACCENT} strokeWidth="1.5" strokeDasharray="3 4" opacity={0.7} />
-                        <line x1={toPixelX(probeX)} y1={toPixelY(0)} x2={toPixelX(probeX)} y2={toPixelY(probeY)} stroke={ACCENT} strokeWidth="1.5" strokeDasharray="3 4" opacity={0.7} />
+                        <line x1={toPixelX(probeX)} y1={toPixelY(0)} x2={toPixelX(probeX)} y2={toPixelY(probeY)} stroke={PROBE} strokeWidth="1.5" strokeDasharray="3 4" opacity={0.8} />
                         <Halo active={isActive("probe")}>
                             <circle cx={toPixelX(probeX)} cy={toPixelY(probeY)} r="7" fill="none" stroke={ACCENT} strokeWidth="12" />
                         </Halo>
@@ -283,12 +300,13 @@ function LineGridDrawing() {
             {/* INTERCEPT — the crossing point, counterpart of the last number. */}
             <g {...hoverProps("intercept")} opacity={opacity("intercept")} style={EASE_150}>
                 <Halo active={isActive("intercept")}>
-                    <circle cx={toPixelX(0)} cy={toPixelY(intercept)} r="8" fill="none" stroke={ACCENT} strokeWidth="12" />
+                    <circle cx={toPixelX(0)} cy={toPixelY(intercept)} r="8" fill="none" stroke={INTERCEPT} strokeWidth="12" />
                 </Halo>
                 <VerticalHandle
                     x={0}
                     y={intercept}
                     svgRef={svgRef}
+                    color={INTERCEPT}
                     onDragTo={(value) => setVar("lineIntercept", clamp(Math.round(value), 0, 4))}
                 />
             </g>
@@ -299,6 +317,7 @@ function LineGridDrawing() {
                     x={TILT_HANDLE_X}
                     y={heightAt(TILT_HANDLE_X)}
                     svgRef={svgRef}
+                    color={GRADIENT}
                     onDragTo={(value) =>
                         setVar(
                             "lineGradient",
@@ -325,6 +344,7 @@ function DraggableEquationNumber({
     min,
     max,
     step,
+    color,
 }: {
     varName: string;
     value: number;
@@ -333,6 +353,7 @@ function DraggableEquationNumber({
     min: number;
     max: number;
     step: number;
+    color: string;
 }) {
     const setVar = useSetVar();
     const { opacity, weight, isActive, hoverProps } = useLineHighlight();
@@ -350,7 +371,7 @@ function DraggableEquationNumber({
             <text
                 x={x}
                 y={EQUATION_Y}
-                fill={ACCENT}
+                fill={color}
                 fontSize={isActive(highlightId) ? EQUATION_FONT + 2 : EQUATION_FONT}
                 fontWeight={600}
                 style={{ ...NUMERALS, ...EASE_150 }}
@@ -362,7 +383,7 @@ function DraggableEquationNumber({
                 y1={EQUATION_Y + 7}
                 x2={x + width}
                 y2={EQUATION_Y + 7}
-                stroke={ACCENT}
+                stroke={color}
                 strokeWidth={weight(highlightId, 1.5)}
                 strokeDasharray="3 3"
                 opacity={0.8}
@@ -417,8 +438,13 @@ function LineEquationDrawing() {
             <SharedReadouts />
 
             <g opacity={opacity("__structure")} style={EASE_150}>
-                <text x="28" y="86" fill={INK_STRUCTURE} fontSize="16">
-                    y = m x + c
+                <text x="28" y="86" fontSize="16">
+                    <tspan fill={ACCENT}>y</tspan>
+                    <tspan fill={INK_STRUCTURE}>{" = "}</tspan>
+                    <tspan fill={GRADIENT}>m</tspan>
+                    <tspan fill={PROBE}>{" x"}</tspan>
+                    <tspan fill={INK_STRUCTURE}>{" + "}</tspan>
+                    <tspan fill={INTERCEPT}>c</tspan>
                 </text>
             </g>
 
@@ -434,6 +460,7 @@ function LineEquationDrawing() {
                 min={-1.5}
                 max={2}
                 step={0.5}
+                color={GRADIENT}
             />
             <text x={middleX} y={EQUATION_Y} fill={INK} fontSize={EQUATION_FONT} style={NUMERALS} opacity={opacity("__structure")}>
                 x +
@@ -446,18 +473,19 @@ function LineEquationDrawing() {
                 min={0}
                 max={4}
                 step={1}
+                color={INTERCEPT}
             />
 
             <g {...hoverProps("gradient")} opacity={opacity("gradient")} style={EASE_150}>
                 <rect x="20" y="182" width="300" height="24" fill="transparent" />
-                <text x="28" y="200" fill={INK} fontSize="12" style={NUMERALS}>
+                <text x="28" y="200" fill={GRADIENT} fontSize="12" style={NUMERALS}>
                     {`one step right, ${formatNumber(Math.abs(gradient))} ${gradient < 0 ? "down" : "up"}`}
                 </text>
             </g>
 
             <g {...hoverProps("intercept")} opacity={opacity("intercept")} style={EASE_150}>
                 <rect x="20" y="210" width="300" height="24" fill="transparent" />
-                <text x="28" y="228" fill={INK} fontSize="12" style={NUMERALS}>
+                <text x="28" y="228" fill={INTERCEPT} fontSize="12" style={NUMERALS}>
                     {`crosses the y-axis at ${formatNumber(intercept)}`}
                 </text>
             </g>
@@ -468,11 +496,19 @@ function LineEquationDrawing() {
                 <text
                     x="28"
                     y="280"
-                    fill={ACCENT}
                     fontSize={isActive("probe") ? "16" : "15"}
                     style={{ ...NUMERALS, ...EASE_150 }}
                 >
-                    {`x = ${probeX} → y = ${gradientLabel} × ${probeX} + ${formatNumber(intercept)} = ${formatNumber(probeY)}`}
+                    <tspan fill={PROBE}>{`x = ${probeX}`}</tspan>
+                    <tspan fill={INK_STRUCTURE}>{" → "}</tspan>
+                    <tspan fill={ACCENT}>{"y = "}</tspan>
+                    <tspan fill={GRADIENT}>{gradientLabel}</tspan>
+                    <tspan fill={INK_STRUCTURE}>{" × "}</tspan>
+                    <tspan fill={PROBE}>{probeX}</tspan>
+                    <tspan fill={INK_STRUCTURE}>{" + "}</tspan>
+                    <tspan fill={INTERCEPT}>{formatNumber(intercept)}</tspan>
+                    <tspan fill={INK_STRUCTURE}>{" = "}</tspan>
+                    <tspan fill={ACCENT}>{formatNumber(probeY)}</tspan>
                 </text>
             </g>
         </svg>
@@ -494,7 +530,7 @@ function LineGridFigure() {
         <Figure
             id="straight-line-grid"
             onReset={() => resetLine(setVar)}
-            caption="Drag the upper teal handle to tilt the line, or the one sitting on the y-axis to slide it up and down. The staircase always takes one step right, then climbs by the gradient."
+            caption="Drag the upper amber handle to tilt the line, or the violet one sitting on the y-axis to slide it up and down. The staircase always takes one step right, then climbs by the gradient."
         >
             <LineGridDrawing />
             <InteractionHintSequence
@@ -549,8 +585,14 @@ function LineEquationFigure() {
 function LiveSubstitution() {
     const { gradient, intercept, probeX, probeY } = useLineModel();
     return (
-        <span style={{ ...NUMERALS, color: ACCENT, fontWeight: 600 }}>
-            {`${formatNumber(gradient)} × ${probeX} + ${formatNumber(intercept)} = ${formatNumber(probeY)}`}
+        <span style={{ ...NUMERALS, fontWeight: 600 }}>
+            <span style={{ color: GRADIENT }}>{formatNumber(gradient)}</span>
+            {" × "}
+            <span style={{ color: PROBE }}>{probeX}</span>
+            {" + "}
+            <span style={{ color: INTERCEPT }}>{formatNumber(intercept)}</span>
+            {" = "}
+            <span style={{ color: ACCENT }}>{formatNumber(probeY)}</span>
         </span>
     );
 }
@@ -572,12 +614,16 @@ export const straightLinesBlocks: ReactElement[] = [
                 <InlineLinkedHighlight
                     varName="lineHighlight"
                     highlightId="gradient"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("lineHighlight"))}
+                    {...HIGHLIGHT_STYLE.gradient}
                 >
                     gradient
                 </InlineLinkedHighlight>
-                , written m. Drag the upper teal handle to tilt the line, or drag either number in
-                the equation beside it.
+                , written m. Drag the upper amber handle to tilt the line, or drag either number
+                in the equation beside it, and{" "}
+                <InlineTrigger varName="lineGradient" value={0} icon="zap">
+                    a flat line
+                </InlineTrigger>
+                {" "}is the one case where the climb is nothing at all.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -585,10 +631,12 @@ export const straightLinesBlocks: ReactElement[] = [
     <StackLayout key="layout-straight-lines-formula" maxWidth="xl">
         <Block id="straight-lines-formula" padding="lg">
             <FormulaBlock
-                latex="y = \highlight{gradient}{m}x + \highlight{intercept}{c}"
+                latex="y = \highlight{gradient}{m}\,\clr{probe}{x} + \highlight{intercept}{c} \qquad y = \scrub{lineGradient}\,\clr{probe}{x} + \scrub{lineIntercept}"
+                colorMap={{ probe: PROBE }}
+                variables={scrubVarsFromDefinitions(["lineGradient", "lineIntercept"])}
                 linkedHighlights={{
-                    gradient: { varName: "lineHighlight", color: ACCENT, bgColor: "rgba(98, 208, 173, 0.22)" },
-                    intercept: { varName: "lineHighlight", color: ACCENT, bgColor: "rgba(98, 208, 173, 0.22)" },
+                    gradient: { varName: "lineHighlight", ...HIGHLIGHT_STYLE.gradient },
+                    intercept: { varName: "lineHighlight", ...HIGHLIGHT_STYLE.intercept },
                 }}
             />
         </Block>
@@ -611,16 +659,31 @@ export const straightLinesBlocks: ReactElement[] = [
                 <InlineLinkedHighlight
                     varName="lineHighlight"
                     highlightId="intercept"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("lineHighlight"))}
+                    {...HIGHLIGHT_STYLE.intercept}
                 >
                     crosses the y-axis
-                </InlineLinkedHighlight>{" "}
-                is the second number, c. At x ={" "}
+                </InlineLinkedHighlight>
+                {" "}is the second number,{" "}
+                <InlineTooltip
+                    id="tooltip-straight-lines-intercept"
+                    tooltip="c is short for constant. It is the height of the line when x is zero, which is exactly where the line meets the y-axis."
+                >
+                    c
+                </InlineTooltip>
+                . Feed in x ={" "}
                 <InlineScrubbleNumber
                     varName="lineProbeX"
                     {...numberPropsFromDefinition(getVariableInfo("lineProbeX"))}
-                />{" "}
-                the equation works out as <LiveSubstitution />, so that point sits on the line.
+                />
+                {" "}and the equation works out as <LiveSubstitution />, so that{" "}
+                <InlineLinkedHighlight
+                    varName="lineHighlight"
+                    highlightId="probe"
+                    {...HIGHLIGHT_STYLE.probe}
+                >
+                    point
+                </InlineLinkedHighlight>
+                {" "}sits on the line.
             </EditableParagraph>
         </Block>
     </StackLayout>,

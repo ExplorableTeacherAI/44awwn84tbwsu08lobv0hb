@@ -291,7 +291,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 4,
         step: 1,
-        color: LESSON_COLORS.across,
+        color: LESSON_COLORS.derived,
     },
 
     /** The x value fed into the equation, marked on the line. */
@@ -303,7 +303,7 @@ export const variableDefinitions: Record<string, VariableDefinition> = {
         min: 0,
         max: 9,
         step: 1,
-        color: LESSON_COLORS.derived,
+        color: LESSON_COLORS.across,
     },
 
     /** Highlight channel for the line pair: '' | 'gradient' | 'intercept' | 'probe' */

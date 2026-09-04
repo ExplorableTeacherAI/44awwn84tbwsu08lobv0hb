@@ -1,7 +1,8 @@
 import { type ReactElement } from "react";
 import { Block } from "@/components/templates";
 import { StackLayout } from "@/components/layouts";
-import { EditableH2, EditableParagraph } from "@/components/atoms";
+import { EditableH2, EditableParagraph, InlineSpotColor } from "@/components/atoms";
+import { LESSON_COLORS } from "../lessonColors";
 
 export const wrappingUpBlocks: ReactElement[] = [
     <StackLayout key="layout-wrapping-up-heading" maxWidth="xl">
@@ -15,10 +16,20 @@ export const wrappingUpBlocks: ReactElement[] = [
     <StackLayout key="layout-wrapping-up-insight" maxWidth="xl">
         <Block id="wrapping-up-insight" padding="sm">
             <EditableParagraph id="para-wrapping-up-insight" blockId="wrapping-up-insight">
-                Every formula here grew out of the same right-angled triangle. Distance squares the
-                across step and the up step and then roots the total, the circle equation is that
-                same distance held fixed at r, and the midpoint just halves each step instead of
-                squaring it. Four formulas, one idea underneath.
+                Every formula here grew out of the same right-angled triangle. Distance squares the{" "}
+                <InlineSpotColor varName="distancePinBx" color={LESSON_COLORS.across}>
+                    across step
+                </InlineSpotColor>
+                {" "}and the{" "}
+                <InlineSpotColor varName="distancePinBy" color={LESSON_COLORS.up}>
+                    up step
+                </InlineSpotColor>
+                {" "}and then roots the total, the circle equation is that same{" "}
+                <InlineSpotColor varName="circleRadius" color={LESSON_COLORS.result}>
+                    distance
+                </InlineSpotColor>
+                {" "}held fixed at r, and the midpoint just halves each step instead of squaring
+                it. Four formulas, one idea underneath.
             </EditableParagraph>
         </Block>
     </StackLayout>,

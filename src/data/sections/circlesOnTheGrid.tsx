@@ -8,6 +8,8 @@ import {
     InlineClozeInput,
     InlineFeedback,
     InlineLinkedHighlight,
+    InlineTooltip,
+    InlineTrigger,
     InteractionHintSequence,
 } from "@/components/atoms";
 import { Figure, FormulaBlock } from "@/components/molecules";
@@ -17,8 +19,9 @@ import {
     choicePropsFromDefinition,
     clozePropsFromDefinition,
     getVariableInfo,
-    linkedHighlightPropsFromDefinition,
+    scrubVarsFromDefinitions,
 } from "../variables";
+import { LESSON_BACKGROUNDS, LESSON_COLORS } from "../lessonColors";
 
 // ── View geometry ────────────────────────────────────────────────────────────
 // The grid fills the left half; the panel gutter on the right was reserved
@@ -41,7 +44,20 @@ const RADIUS_MAX = 3;
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
 const INK_QUIET = "#CBD5E1";
-const ACCENT = "#62D0AD";
+// ONE quantity, ONE colour: the centre is violet, its across coordinate indigo,
+// its up coordinate amber, and the radius teal.
+const ACCENT = LESSON_COLORS.result;
+const CENTRE = LESSON_COLORS.derived;
+const ACROSS = LESSON_COLORS.across;
+const UP = LESSON_COLORS.up;
+
+/** Highlight chip colours, one per quantity, shared by prose and formula. */
+const HIGHLIGHT_STYLE = {
+    centre: { color: CENTRE, bgColor: LESSON_BACKGROUNDS.derived },
+    centreX: { color: ACROSS, bgColor: LESSON_BACKGROUNDS.across },
+    centreY: { color: UP, bgColor: LESSON_BACKGROUNDS.up },
+    radius: { color: ACCENT, bgColor: LESSON_BACKGROUNDS.result },
+} as const;
 
 const EASE_150 = { transition: "opacity 150ms ease, stroke-width 150ms ease" } as const;
 const NUMERALS = { fontVariantNumeric: "tabular-nums" } as const;
@@ -70,10 +86,17 @@ const useCircleModel = () => {
 
 // ── Highlight channel shared by the drawing, the formula and the prose ───────
 
+const isCentreId = (id: string) => id === "centre" || id === "centreX" || id === "centreY";
+
 const useCircleHighlight = () => {
     const highlight = useVar<string>("circleHighlight", "");
     const setVar = useSetVar();
-    const active = (id: string) => highlight === id;
+    // Hovering the centre lights both of its coordinates; hovering either
+    // coordinate lights the pin it came from.
+    const active = (id: string) =>
+        highlight === id ||
+        (highlight === "centre" && isCentreId(id)) ||
+        (isCentreId(highlight) && id === "centre");
     return {
         isActive: active,
         opacity: (id: string) => (highlight && !active(id) ? 0.35 : 1),
@@ -209,13 +232,45 @@ function CircleEquationDrawing() {
                 />
             </g>
 
+            {/* a — where the centre sits across, the counterpart of the first bracket. */}
+            <g {...hoverProps("centreX")} opacity={opacity("centreX")} style={EASE_150}>
+                <line
+                    x1={centre.x}
+                    y1={centre.y}
+                    x2={centre.x}
+                    y2={toPixelY(0)}
+                    stroke={ACROSS}
+                    strokeWidth={weight("centreX", 1.5)}
+                    strokeDasharray="4 4"
+                />
+                <text x={centre.x} y={toPixelY(0) + (centreY < 0 ? -8 : 16)} textAnchor="middle" fill={ACROSS} fontSize="11" style={NUMERALS}>
+                    {`a = ${formatSigned(centreX)}`}
+                </text>
+            </g>
+
+            {/* b — where the centre sits up, the counterpart of the second bracket. */}
+            <g {...hoverProps("centreY")} opacity={opacity("centreY")} style={EASE_150}>
+                <line
+                    x1={centre.x}
+                    y1={centre.y}
+                    x2={toPixelX(0)}
+                    y2={centre.y}
+                    stroke={UP}
+                    strokeWidth={weight("centreY", 1.5)}
+                    strokeDasharray="4 4"
+                />
+                <text x={toPixelX(0) + (centreX < 0 ? 8 : -8)} y={centre.y - 6} textAnchor={centreX < 0 ? "start" : "end"} fill={UP} fontSize="11" style={NUMERALS}>
+                    {`b = ${formatSigned(centreY)}`}
+                </text>
+            </g>
+
             {/* CENTRE — the pin the whole circle hangs from. */}
             <g {...hoverProps("centre")} opacity={opacity("centre")} style={EASE_150}>
                 <Halo active={isActive("centre")}>
-                    <circle cx={centre.x} cy={centre.y} r="7" fill="none" stroke={INK_STRUCTURE} strokeWidth="12" />
+                    <circle cx={centre.x} cy={centre.y} r="7" fill="none" stroke={CENTRE} strokeWidth="12" />
                 </Halo>
                 <g transform={`translate(${centre.x} ${centre.y}) scale(${centreScale})`}>
-                    <circle r="7" fill={INK_STRUCTURE} filter="url(#circle-handle-shadow)" />
+                    <circle r="7" fill={CENTRE} filter="url(#circle-handle-shadow)" />
                 </g>
                 <circle
                     cx={centre.x}
@@ -240,11 +295,15 @@ function CircleEquationDrawing() {
                 every line ends well inside the 536 right-hand limit. */}
             <g {...hoverProps("centre")} opacity={opacity("centre")} style={EASE_150}>
                 <rect x={PANEL_X - 8} y="46" width="190" height="46" fill="transparent" />
-                <text x={PANEL_X} y="60" fill={INK_STRUCTURE} fontSize="11">
+                <text x={PANEL_X} y="60" fill={CENTRE} fontSize="11">
                     centre
                 </text>
-                <text x={PANEL_X} y="84" fill={INK} fontSize="14" style={NUMERALS}>
-                    {`(${formatSigned(centreX)}, ${formatSigned(centreY)})`}
+                <text x={PANEL_X} y="84" fontSize="14" style={NUMERALS}>
+                    <tspan fill={CENTRE}>{"("}</tspan>
+                    <tspan fill={ACROSS}>{formatSigned(centreX)}</tspan>
+                    <tspan fill={CENTRE}>{", "}</tspan>
+                    <tspan fill={UP}>{formatSigned(centreY)}</tspan>
+                    <tspan fill={CENTRE}>{")"}</tspan>
                 </text>
             </g>
 
@@ -262,8 +321,12 @@ function CircleEquationDrawing() {
                 <text x={PANEL_X} y="176" fill={INK_STRUCTURE} fontSize="11">
                     equation
                 </text>
-                <text x={PANEL_X} y="202" fill={INK} fontSize="13" style={NUMERALS}>
-                    {`${bracketFor("x", centreX)} + ${bracketFor("y", centreY)} = ${radius * radius}`}
+                <text x={PANEL_X} y="202" fontSize="13" style={NUMERALS}>
+                    <tspan fill={ACROSS}>{bracketFor("x", centreX)}</tspan>
+                    <tspan fill={INK}>{" + "}</tspan>
+                    <tspan fill={UP}>{bracketFor("y", centreY)}</tspan>
+                    <tspan fill={INK}>{" = "}</tspan>
+                    <tspan fill={ACCENT}>{radius * radius}</tspan>
                 </text>
             </g>
 
@@ -299,7 +362,7 @@ function CircleEquationFigure() {
                 setVar("circleBeadAngle", 30);
                 setVar("circleHighlight", "");
             }}
-            caption="Drag the grey centre pin to move the whole circle, or pull the teal bead in and out to resize it. The equation beside the grid rewrites itself every time."
+            caption="Drag the violet centre pin to move the whole circle, or pull the teal bead in and out to resize it. The equation beside the grid rewrites itself every time."
         >
             <CircleEquationDrawing />
             <InteractionHintSequence
@@ -322,8 +385,12 @@ function CircleEquationFigure() {
 function LiveCircleEquation() {
     const { centreX, centreY, radius } = useCircleModel();
     return (
-        <span style={{ ...NUMERALS, color: ACCENT, fontWeight: 600 }}>
-            {`${bracketFor("x", centreX)} + ${bracketFor("y", centreY)} = ${radius * radius}`}
+        <span style={{ ...NUMERALS, fontWeight: 600 }}>
+            <span style={{ color: ACROSS }}>{bracketFor("x", centreX)}</span>
+            {" + "}
+            <span style={{ color: UP }}>{bracketFor("y", centreY)}</span>
+            {" = "}
+            <span style={{ color: ACCENT }}>{radius * radius}</span>
         </span>
     );
 }
@@ -342,16 +409,16 @@ export const circlesOnTheGridBlocks: ReactElement[] = [
             <EditableParagraph id="para-circles-setup" blockId="circles-setup">
                 A circle is nothing more than every point sitting the same distance from one
                 centre. That is the distance formula again, with the distance held fixed at r.
-                Drag the grey{" "}
+                Drag the violet{" "}
                 <InlineLinkedHighlight
                     varName="circleHighlight"
                     highlightId="centre"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("circleHighlight"))}
+                    {...HIGHLIGHT_STYLE.centre}
                 >
                     centre pin
-                </InlineLinkedHighlight>{" "}
-                to move the whole circle, or pull the teal bead on the rim in and out, and the
-                equation becomes <LiveCircleEquation />.
+                </InlineLinkedHighlight>
+                {" "}to move the whole circle, or pull the teal bead on the rim in and out, and
+                the equation becomes <LiveCircleEquation />.
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -365,10 +432,23 @@ export const circlesOnTheGridBlocks: ReactElement[] = [
     <StackLayout key="layout-circles-formula" maxWidth="xl">
         <Block id="circles-formula" padding="lg">
             <FormulaBlock
-                latex="(x - \highlight{centre}{a})^2 + (y - \highlight{centre}{b})^2 = \highlight{radius}{r}^2"
+                className="overflow-x-auto"
+                latex="(x - \highlight{centreX}{a})^2 + (y - \highlight{centreY}{b})^2 = \highlight{radius}{r}^2 \qquad (x - \scrub{circleCentreX})^2 + (y - \scrub{circleCentreY})^2 = \scrub{circleRadius}^2"
+                variables={{
+                    circleCentreX: {
+                        ...scrubVarsFromDefinitions(["circleCentreX"]).circleCentreX,
+                        formatValue: (value: number) => (value < 0 ? `(-${Math.abs(value)})` : String(value)),
+                    },
+                    circleCentreY: {
+                        ...scrubVarsFromDefinitions(["circleCentreY"]).circleCentreY,
+                        formatValue: (value: number) => (value < 0 ? `(-${Math.abs(value)})` : String(value)),
+                    },
+                    circleRadius: scrubVarsFromDefinitions(["circleRadius"]).circleRadius,
+                }}
                 linkedHighlights={{
-                    centre: { varName: "circleHighlight", color: ACCENT, bgColor: "rgba(98, 208, 173, 0.22)" },
-                    radius: { varName: "circleHighlight", color: ACCENT, bgColor: "rgba(98, 208, 173, 0.22)" },
+                    centreX: { varName: "circleHighlight", ...HIGHLIGHT_STYLE.centreX },
+                    centreY: { varName: "circleHighlight", ...HIGHLIGHT_STYLE.centreY },
+                    radius: { varName: "circleHighlight", ...HIGHLIGHT_STYLE.radius },
                 }}
             />
         </Block>
@@ -377,18 +457,28 @@ export const circlesOnTheGridBlocks: ReactElement[] = [
     <StackLayout key="layout-circles-worked-example" maxWidth="xl">
         <Block id="circles-worked-example" padding="sm">
             <EditableParagraph id="para-circles-worked-example" blockId="circles-worked-example">
-                Squaring both sides clears the square root and leaves the equation of a circle,
-                with centre (a, b) and{" "}
+                Squaring both sides clears the{" "}
+                <InlineTooltip
+                    id="tooltip-circles-square-root"
+                    tooltip="The square root undoes squaring: the square root of 36 is 6, because 6 × 6 = 36."
+                >
+                    square root
+                </InlineTooltip>
+                {" "}and leaves the equation of a circle, with centre (a, b) and{" "}
                 <InlineLinkedHighlight
                     varName="circleHighlight"
                     highlightId="radius"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("circleHighlight"))}
+                    {...HIGHLIGHT_STYLE.radius}
                 >
                     radius
-                </InlineLinkedHighlight>{" "}
-                r. Watch the number on the right: it is r squared, so the radius is its square
-                root. A plus sign inside the brackets means a negative coordinate, because y + 2
-                is really y − (−2).
+                </InlineLinkedHighlight>
+                {" "}r. Watch the number on the right: it is r squared, so the radius is its
+                square root, and{" "}
+                <InlineTrigger varName="circleRadius" value={1} icon="zap">
+                    the unit circle
+                </InlineTrigger>
+                {" "}is the special case where both are 1. A plus sign inside the brackets means a
+                negative coordinate, because y + 2 is really y − (−2).
             </EditableParagraph>
         </Block>
     </StackLayout>,
@@ -459,7 +549,7 @@ export const circlesOnTheGridBlocks: ReactElement[] = [
                         steps: [
                             {
                                 gesture: "drag-vertical",
-                                label: "Drag the grey centre pin down to −1 and watch the second bracket",
+                                label: "Drag the violet centre pin down to −1 and watch the second bracket",
                                 position: { x: "32%", y: "44%" },
                                 completionVar: "circleCentreY",
                                 completionValue: -1,

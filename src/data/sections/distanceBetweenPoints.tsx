@@ -11,6 +11,7 @@ import {
     InlineScrubbleNumber,
     InlineSpotColor,
     InlineToggle,
+    InlineTooltip,
     InteractionHintSequence,
 } from "@/components/atoms";
 import { Figure, FigureSlider } from "@/components/molecules";
@@ -20,10 +21,11 @@ import { clamp, useSpring, type Vec2 } from "@/lib/motion";
 import {
     clozePropsFromDefinition,
     getVariableInfo,
-    linkedHighlightPropsFromDefinition,
     numberPropsFromDefinition,
+    scrubVarsFromDefinitions,
     togglePropsFromDefinition,
 } from "../variables";
+import { LESSON_BACKGROUNDS, LESSON_COLORS } from "../lessonColors";
 
 // ── Shared view geometry — the visible tie between the two views ─────────────
 // Both drawings use the same viewBox and the same pixels-per-grid-square, so
@@ -40,7 +42,21 @@ const GRID_MAX_Y = 8;
 const INK = "#334155";
 const INK_STRUCTURE = "#64748B";
 const INK_QUIET = "#CBD5E1";
-const ACCENT = "#62D0AD";
+// ONE quantity, ONE colour: the across step is indigo, the up step is amber,
+// the squared total is violet and the distance itself is teal — in the grid, in
+// the working, in the formula and in the prose alike.
+const ACCENT = LESSON_COLORS.result;
+const ACROSS = LESSON_COLORS.across;
+const UP = LESSON_COLORS.up;
+const DERIVED = LESSON_COLORS.derived;
+
+/** Highlight chip colours, one per quantity, shared by prose and formula. */
+const HIGHLIGHT_STYLE = {
+    across: { color: ACROSS, bgColor: LESSON_BACKGROUNDS.across },
+    up: { color: UP, bgColor: LESSON_BACKGROUNDS.up },
+    squares: { color: DERIVED, bgColor: LESSON_BACKGROUNDS.derived },
+    distance: { color: ACCENT, bgColor: LESSON_BACKGROUNDS.result },
+} as const;
 
 const EASE_150 = { transition: "opacity 150ms ease, stroke-width 150ms ease" } as const;
 const NUMERALS = { fontVariantNumeric: "tabular-nums" } as const;
@@ -108,10 +124,10 @@ function SharedReadouts() {
     const { opacity } = useDistanceHighlight();
     return (
         <g fontSize="12" style={{ ...NUMERALS, ...EASE_150 }}>
-            <text x="24" y="28" fill={INK} opacity={opacity("across")}>
+            <text x="24" y="28" fill={ACROSS} opacity={opacity("across")}>
                 {`across = ${formatStep(across)}`}
             </text>
-            <text x="164" y="28" fill={INK} opacity={opacity("up")}>
+            <text x="164" y="28" fill={UP} opacity={opacity("up")}>
                 {`up = ${formatStep(up)}`}
             </text>
             <text
@@ -181,7 +197,11 @@ function DraggablePin({
                 fontSize="12"
                 style={NUMERALS}
             >
-                {labelText}
+                <tspan fill={INK}>{`${label} (`}</tspan>
+                <tspan fill={ACROSS}>{x}</tspan>
+                <tspan fill={INK}>{", "}</tspan>
+                <tspan fill={UP}>{y}</tspan>
+                <tspan fill={INK}>{")"}</tspan>
             </text>
             <circle
                 cx={cx}
@@ -283,17 +303,17 @@ function DistanceGridDrawing() {
             {/* ACROSS leg — counterpart of the first line of the working. */}
             <g {...hoverProps("across")} opacity={opacity("across")} style={EASE_150}>
                 <Halo active={isActive("across")}>
-                    <line x1={pinA.x} y1={pinA.y} x2={corner.x} y2={corner.y} stroke={INK_STRUCTURE} strokeWidth={weight("across", 2) + 6} strokeLinecap="round" />
+                    <line x1={pinA.x} y1={pinA.y} x2={corner.x} y2={corner.y} stroke={ACROSS} strokeWidth={weight("across", 2.5) + 6} strokeLinecap="round" />
                 </Halo>
-                <line x1={pinA.x} y1={pinA.y} x2={corner.x} y2={corner.y} stroke={INK_STRUCTURE} strokeWidth={weight("across", 2)} strokeLinecap="round" />
+                <line x1={pinA.x} y1={pinA.y} x2={corner.x} y2={corner.y} stroke={ACROSS} strokeWidth={weight("across", 2.5)} strokeLinecap="round" />
             </g>
 
             {/* UP leg — counterpart of the second line of the working. */}
             <g {...hoverProps("up")} opacity={opacity("up")} style={EASE_150}>
                 <Halo active={isActive("up")}>
-                    <line x1={corner.x} y1={corner.y} x2={pinB.x} y2={pinB.y} stroke={INK_STRUCTURE} strokeWidth={weight("up", 2) + 6} strokeLinecap="round" />
+                    <line x1={corner.x} y1={corner.y} x2={pinB.x} y2={pinB.y} stroke={UP} strokeWidth={weight("up", 2.5) + 6} strokeLinecap="round" />
                 </Halo>
-                <line x1={corner.x} y1={corner.y} x2={pinB.x} y2={pinB.y} stroke={INK_STRUCTURE} strokeWidth={weight("up", 2)} strokeLinecap="round" />
+                <line x1={corner.x} y1={corner.y} x2={pinB.x} y2={pinB.y} stroke={UP} strokeWidth={weight("up", 2.5)} strokeLinecap="round" />
             </g>
 
             {/* The right-angle mark, only where the triangle actually exists. */}
@@ -343,7 +363,7 @@ function DistanceWorkingDrawing() {
             {/* ACROSS line — counterpart of the horizontal leg on the grid. */}
             <g {...hoverProps("across")} opacity={opacity("across")} style={EASE_150}>
                 <rect x="20" y="72" width="290" height="26" fill="transparent" />
-                <text x="28" y="90" fill={INK} fontSize="14" style={NUMERALS}>
+                <text x="28" y="90" fill={ACROSS} fontSize="14" style={NUMERALS}>
                     {`across = ${bx} − ${ax} = ${formatStep(across)}`}
                 </text>
             </g>
@@ -351,7 +371,7 @@ function DistanceWorkingDrawing() {
             {/* UP line — counterpart of the vertical leg on the grid. */}
             <g {...hoverProps("up")} opacity={opacity("up")} style={EASE_150}>
                 <rect x="20" y="110" width="290" height="26" fill="transparent" />
-                <text x="28" y="128" fill={INK} fontSize="14" style={NUMERALS}>
+                <text x="28" y="128" fill={UP} fontSize="14" style={NUMERALS}>
                     {`up = ${by} − ${ay} = ${formatStep(up)}`}
                 </text>
             </g>
@@ -359,8 +379,12 @@ function DistanceWorkingDrawing() {
             {/* SQUARES line — hovering it lights BOTH legs on the grid. */}
             <g {...hoverProps("squares")} opacity={opacity("squares")} style={EASE_150}>
                 <rect x="20" y="158" width="290" height="46" fill="transparent" />
-                <text x="28" y="176" fill={INK} fontSize="14" style={NUMERALS}>
-                    {`${squaredTerm(across)} + ${squaredTerm(up)} = ${across * across} + ${up * up} = ${squaredTotal}`}
+                <text x="28" y="176" fontSize="14" style={NUMERALS}>
+                    <tspan fill={ACROSS}>{squaredTerm(across)}</tspan>
+                    <tspan fill={INK}> + </tspan>
+                    <tspan fill={UP}>{squaredTerm(up)}</tspan>
+                    <tspan fill={INK}> = </tspan>
+                    <tspan fill={DERIVED}>{`${across * across} + ${up * up} = ${squaredTotal}`}</tspan>
                 </text>
                 <text x="28" y="196" fill={INK_STRUCTURE} fontSize="11">
                     that total is d squared, not d
@@ -370,8 +394,10 @@ function DistanceWorkingDrawing() {
             {/* DISTANCE line and bar — the accent quantity in both views. */}
             <g {...hoverProps("distance")} opacity={opacity("distance")} style={EASE_150}>
                 <rect x="20" y="226" width="290" height="70" fill="transparent" />
-                <text x="28" y="250" fill={ACCENT} fontSize="16" style={NUMERALS}>
-                    {`d = √${squaredTotal} = ${formatDistance(distance)}`}
+                <text x="28" y="250" fontSize="16" style={NUMERALS}>
+                    <tspan fill={ACCENT}>{"d = √"}</tspan>
+                    <tspan fill={DERIVED}>{squaredTotal}</tspan>
+                    <tspan fill={ACCENT}>{` = ${formatDistance(distance)}`}</tspan>
                 </text>
                 <Halo active={isActive("distance")}>
                     <line x1="28" y1="282" x2={barEnd} y2="282" stroke={ACCENT} strokeWidth={weight("distance", 3) + 6} strokeLinecap="round" />
@@ -444,7 +470,9 @@ function DistanceWorkingFigure() {
 
 function LiveSquaredTotal() {
     const { squaredTotal } = useDistanceModel();
-    return <span style={NUMERALS}>{squaredTotal}</span>;
+    return (
+        <span style={{ ...NUMERALS, color: DERIVED, fontWeight: 600 }}>{squaredTotal}</span>
+    );
 }
 
 function LiveDistance() {
@@ -499,18 +527,55 @@ export const distanceBetweenPointsBlocks: ReactElement[] = [
 
     <StackLayout key="layout-distance-setup" maxWidth="xl">
         <Block id="distance-setup" padding="sm">
-            <EditableParagraph id="para-distance-setup" blockId="distance-setup">Two pins on a map are hardly ever straight across or straight up from each other, so counting squares will not do it. Travel <InlineLinkedHighlight varName={"distanceHighlight"} highlightId={"across"} color={"#FDD835"} bgColor={"rgba(98, 208, 173, 0.22)"} id={"linkedHighlight-1788005314634-0fwvg"}>across</InlineLinkedHighlight>, then travel <InlineLinkedHighlight varName={"distanceHighlight"} highlightId={"up"} color={"#FDD835"} bgColor={"rgba(98, 208, 173, 0.22)"} id={"linkedHighlight-1788005314637-tgaz0"}>up</InlineLinkedHighlight>, and those two moves build a right-angled triangle with the pins at the ends of the slope. Drag either <InlineSpotColor varName={"distancePinBx"} color={"#62D0AD"} id={"spotColor-1788005314641-q89ls"}>teal pin</InlineSpotColor> and watch the working rebuild itself line by line.</EditableParagraph>
+            <EditableParagraph id="para-distance-setup" blockId="distance-setup">
+                Two pins on a map are hardly ever straight across or straight up from each other,
+                so counting squares will not do it. Travel{" "}
+                <InlineLinkedHighlight
+                    varName="distanceHighlight"
+                    highlightId="across"
+                    {...HIGHLIGHT_STYLE.across}
+                >
+                    across
+                </InlineLinkedHighlight>
+                , then travel{" "}
+                <InlineLinkedHighlight
+                    varName="distanceHighlight"
+                    highlightId="up"
+                    {...HIGHLIGHT_STYLE.up}
+                >
+                    up
+                </InlineLinkedHighlight>
+                , and those two moves build a{" "}
+                <InlineTooltip
+                    id="tooltip-distance-right-angled-triangle"
+                    tooltip="A triangle with one square corner. The two short sides meet at 90°, and the longest side, the one joining the pins, is called the hypotenuse."
+                >
+                    right-angled triangle
+                </InlineTooltip>
+                {" "}with the pins at the ends of the slope. Drag either{" "}
+                <InlineSpotColor varName="distanceHighlight" color={ACCENT}>
+                    teal pin
+                </InlineSpotColor>
+                {" "}and watch the working rebuild itself line by line.
+            </EditableParagraph>
         </Block>
     </StackLayout>,
 
     <StackLayout key="layout-distance-formula" maxWidth="xl">
         <Block id="distance-formula" padding="lg">
             <FormulaBlock
-                latex="\highlight{distance}{d} = \sqrt{\highlight{across}{(x_2 - x_1)^2} + \highlight{up}{(y_2 - y_1)^2}}"
+                className="overflow-x-auto"
+                latex="\highlight{distance}{d} = \sqrt{\highlight{across}{(x_2 - x_1)^2} + \highlight{up}{(y_2 - y_1)^2}} = \sqrt{(\scrub{distancePinBx} - \scrub{distancePinAx})^2 + (\scrub{distancePinBy} - \scrub{distancePinAy})^2}"
+                variables={scrubVarsFromDefinitions([
+                    "distancePinAx",
+                    "distancePinAy",
+                    "distancePinBx",
+                    "distancePinBy",
+                ])}
                 linkedHighlights={{
-                    distance: { varName: "distanceHighlight", color: ACCENT, bgColor: "rgba(98, 208, 173, 0.22)" },
-                    across: { varName: "distanceHighlight", color: ACCENT, bgColor: "rgba(98, 208, 173, 0.22)" },
-                    up: { varName: "distanceHighlight", color: ACCENT, bgColor: "rgba(98, 208, 173, 0.22)" },
+                    distance: { varName: "distanceHighlight", ...HIGHLIGHT_STYLE.distance },
+                    across: { varName: "distanceHighlight", ...HIGHLIGHT_STYLE.across },
+                    up: { varName: "distanceHighlight", ...HIGHLIGHT_STYLE.up },
                 }}
             />
         </Block>
@@ -540,12 +605,20 @@ export const distanceBetweenPointsBlocks: ReactElement[] = [
                     varName="distancePinBy"
                     {...numberPropsFromDefinition(getVariableInfo("distancePinBy"))}
                 />
-                ) the two squares add to <LiveSquaredTotal />, and the square root of that,{" "}
+                ) the{" "}
+                <InlineLinkedHighlight
+                    varName="distanceHighlight"
+                    highlightId="squares"
+                    {...HIGHLIGHT_STYLE.squares}
+                >
+                    two squares
+                </InlineLinkedHighlight>
+                {" "}add to <LiveSquaredTotal />, and the square root of that,{" "}
                 <LiveDistance />, is the real{" "}
                 <InlineLinkedHighlight
                     varName="distanceHighlight"
                     highlightId="distance"
-                    {...linkedHighlightPropsFromDefinition(getVariableInfo("distanceHighlight"))}
+                    {...HIGHLIGHT_STYLE.distance}
                 >
                     distance
                 </InlineLinkedHighlight>

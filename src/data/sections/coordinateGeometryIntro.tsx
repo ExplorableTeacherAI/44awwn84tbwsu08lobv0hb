@@ -1,7 +1,7 @@
 import { type ReactElement } from "react";
 import { Block } from "@/components/templates";
 import { StackLayout } from "@/components/layouts";
-import { EditableH1, EditableParagraph } from "@/components/atoms";
+import { EditableH1, EditableParagraph, InlineTooltip } from "@/components/atoms";
 
 export const coordinateGeometryIntroBlocks: ReactElement[] = [
     <StackLayout key="layout-coordinate-intro-title" maxWidth="xl">
@@ -25,8 +25,15 @@ export const coordinateGeometryIntroBlocks: ReactElement[] = [
     <StackLayout key="layout-coordinate-intro-promise" maxWidth="xl">
         <Block id="coordinate-intro-promise" padding="sm">
             <EditableParagraph id="para-coordinate-intro-promise" blockId="coordinate-intro-promise">
-                That is coordinate geometry: turning positions on a grid into numbers you can
-                calculate with. Here is what you will be able to do by the end.
+                That is{" "}
+                <InlineTooltip
+                    id="tooltip-intro-coordinate-geometry"
+                    tooltip="Coordinate geometry describes shapes using the coordinates of their points, so questions about distance, middles and lines become questions about numbers."
+                >
+                    coordinate geometry
+                </InlineTooltip>
+                : turning positions on a grid into numbers you can calculate with. Here is what
+                you will be able to do by the end.
             </EditableParagraph>
         </Block>
     </StackLayout>,
