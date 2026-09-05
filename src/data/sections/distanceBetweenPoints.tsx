@@ -504,16 +504,7 @@ export const distanceBetweenPointsBlocks: ReactElement[] = [
 
     <StackLayout key="layout-block-1788006803776" maxWidth="xl">
         <Block id="block-1788006803776" padding="sm">
-            <EditableParagraph id="para-block-1788006803776" blockId="block-1788006803776">
-                Every shape in geometry starts with points. A{" "}
-                <InlineToggle
-                    id="toggle-starting-shape"
-                    varName="startingShape"
-                    options={["triangle", "line segment", "rectangle", "circle"]}
-                    {...togglePropsFromDefinition(getVariableInfo("startingShape"))}
-                />
-                {" "}needs <ShapePointCount /> to be pinned down completely.
-            </EditableParagraph>
+            <EditableParagraph id="para-block-1788006803776" blockId="block-1788006803776">Every shape in geometry starts with points. A <InlineToggle varName={"startingShape"} options={["triangle", "line segment", "rectangle", "circle"]} color={"#F8A0CD"} bgColor={"rgba(248, 160, 205, 0.18)"} id={"toggle-starting-shape"} /> needs just 2 of them, one at each end to be pinned down completely.</EditableParagraph>
         </Block>
     </StackLayout>,
 
